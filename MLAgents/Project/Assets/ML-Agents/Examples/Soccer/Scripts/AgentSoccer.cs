@@ -154,7 +154,7 @@ public class AgentSoccer : Agent
         else if (position == Position.Striker)
         {
             // Existential penalty for Strikers
-            AddReward(-m_Existential);
+            AddReward(1.3f * -m_Existential);
         }
         MoveAgent(actionBuffers.DiscreteActions);
     }
