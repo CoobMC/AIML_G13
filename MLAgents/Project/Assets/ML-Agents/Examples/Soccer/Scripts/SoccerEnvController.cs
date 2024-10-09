@@ -125,7 +125,7 @@ public class SoccerEnvController : MonoBehaviour
 
         if (lastAgentTouched.team != scoredTeam) // Own goal
         {
-            lastAgentTouched.AddReward(-1f); // Penalty for scoring an own goal
+            lastAgentTouched.AddReward(-0.5f); // Penalty for scoring an own goal
             Debug.LogWarning("own goal. by " + lastAgentTouched.team);
         }
         else
