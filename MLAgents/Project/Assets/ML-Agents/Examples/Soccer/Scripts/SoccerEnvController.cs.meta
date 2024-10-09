@@ -3,8 +3,10 @@ guid: 4e397bc3ae78c466a8d44400f5b68e38
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
-  executionOrder: 0
+  defaultReferences:
+  - ball: {fileID: 100000, guid: 7cb7c129b7ec1fb4293dd40773bdce33, type: 3}
+  - ballRb: {instanceID: 0}
+  executionOrder: 200
   icon: {instanceID: 0}
   userData: 
   assetBundleName: 

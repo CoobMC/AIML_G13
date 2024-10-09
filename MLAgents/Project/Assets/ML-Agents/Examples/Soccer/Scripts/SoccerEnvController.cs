@@ -15,47 +15,51 @@ public class SoccerEnvController : MonoBehaviour
         [HideInInspector]
         public Rigidbody Rb;
     }
+    public string blueGoalTag;
+    public string purpleGoalTag;
 
-
-    /// <summary>
-    /// Max Academy steps before this platform resets
-    /// </summary>
-    /// <returns></returns>
     [Tooltip("Max Environment Steps")] public int MaxEnvironmentSteps = 25000;
-
-    /// <summary>
-    /// The area bounds.
-    /// </summary>
-
-    /// <summary>
-    /// We will be changing the ground material based on success/failue
-    /// </summary>
 
     public GameObject ball;
     [HideInInspector]
     public Rigidbody ballRb;
     Vector3 m_BallStartingPos;
 
-    //List of Agents On Platform
     public List<PlayerInfo> AgentsList = new List<PlayerInfo>();
 
     private SoccerSettings m_SoccerSettings;
-
-
     private SimpleMultiAgentGroup m_BlueAgentGroup;
     private SimpleMultiAgentGroup m_PurpleAgentGroup;
 
     private int m_ResetTimer;
 
+    private AgentSoccer lastAgentTouched;
+
     void Start()
     {
-
         m_SoccerSettings = FindObjectOfType<SoccerSettings>();
-        // Initialize TeamManager
+
+        if (ball != null)
+        {
+            ballRb = ball.GetComponent<Rigidbody>();
+            if (ballRb == null)
+            {
+                Debug.LogError("Rigidbody component not found on the assigned ball.");
+            }
+            else
+            {
+                Debug.Log("Ball Rigidbody assigned successfully.");
+            }
+        }
+        else
+        {
+            Debug.LogError("Ball GameObject is not assigned.");
+        }
+
         m_BlueAgentGroup = new SimpleMultiAgentGroup();
         m_PurpleAgentGroup = new SimpleMultiAgentGroup();
-        ballRb = ball.GetComponent<Rigidbody>();
-        m_BallStartingPos = new Vector3(ball.transform.position.x, ball.transform.position.y, ball.transform.position.z);
+        m_BallStartingPos = ball != null ? ball.transform.position : Vector3.zero;
+
         foreach (var item in AgentsList)
         {
             item.StartingPos = item.Agent.transform.position;
@@ -75,6 +79,23 @@ public class SoccerEnvController : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (ball == null)
+        {
+            ball = GameObject.FindWithTag("ball");
+            if (ball != null)
+            {
+                ballRb = ball.GetComponent<Rigidbody>();
+                if (ballRb == null)
+                {
+                    Debug.LogError("Rigidbody component not found on the ball.");
+                }
+                else
+                {
+                    Debug.Log("Ball and Rigidbody found and assigned successfully.");
+                }
+            }
+        }
+
         m_ResetTimer += 1;
         if (m_ResetTimer >= MaxEnvironmentSteps && MaxEnvironmentSteps > 0)
         {
@@ -84,7 +105,6 @@ public class SoccerEnvController : MonoBehaviour
         }
     }
 
-
     public void ResetBall()
     {
         var randomPosX = Random.Range(-2.5f, 2.5f);
@@ -93,33 +113,36 @@ public class SoccerEnvController : MonoBehaviour
         ball.transform.position = m_BallStartingPos + new Vector3(randomPosX, 0f, randomPosZ);
         ballRb.velocity = Vector3.zero;
         ballRb.angularVelocity = Vector3.zero;
-
     }
 
     public void GoalTouched(Team scoredTeam)
     {
-        if (scoredTeam == Team.Blue)
+        if (lastAgentTouched == null)
         {
-            m_BlueAgentGroup.AddGroupReward(1 - (float)m_ResetTimer / MaxEnvironmentSteps);
-            m_PurpleAgentGroup.AddGroupReward(-1);
+            Debug.LogWarning("No agent was recorded as the last to touch the ball.");
+            return;
+        }
+
+        if (lastAgentTouched.team == scoredTeam) // Own goal
+        {
+            lastAgentTouched.AddReward(-1); // Penalty for scoring an own goal
+            Debug.Log("Own goal scored by " + lastAgentTouched.team);
         }
         else
         {
-            m_PurpleAgentGroup.AddGroupReward(1 - (float)m_ResetTimer / MaxEnvironmentSteps);
-            m_BlueAgentGroup.AddGroupReward(-1);
+            lastAgentTouched.AddReward(1); // Reward for scoring on the opposing goal
+            Debug.Log("Goal scored by " + lastAgentTouched.team);
         }
+
         m_PurpleAgentGroup.EndGroupEpisode();
         m_BlueAgentGroup.EndGroupEpisode();
         ResetScene();
-
     }
-
 
     public void ResetScene()
     {
         m_ResetTimer = 0;
 
-        //Reset Agents
         foreach (var item in AgentsList)
         {
             var randomPosX = Random.Range(-5f, 5f);
@@ -132,7 +155,11 @@ public class SoccerEnvController : MonoBehaviour
             item.Rb.angularVelocity = Vector3.zero;
         }
 
-        //Reset Ball
         ResetBall();
+    }
+
+    public void UpdateLastAgentTouched(AgentSoccer agent)
+    {
+        lastAgentTouched = agent;
     }
 }
