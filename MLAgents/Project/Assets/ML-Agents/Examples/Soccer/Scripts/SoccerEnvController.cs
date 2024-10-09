@@ -33,7 +33,7 @@ public class SoccerEnvController : MonoBehaviour
 
     private int m_ResetTimer;
 
-    private AgentSoccer lastAgentTouched;
+    public AgentSoccer lastAgentTouched;
 
     void Start()
     {
@@ -123,15 +123,14 @@ public class SoccerEnvController : MonoBehaviour
             return;
         }
 
-        if (lastAgentTouched.team == scoredTeam) // Own goal
+        if (lastAgentTouched.team != scoredTeam) // Own goal
         {
-            lastAgentTouched.AddReward(-1); // Penalty for scoring an own goal
-            Debug.Log("Own goal scored by " + lastAgentTouched.team);
+            lastAgentTouched.AddReward(-1f); // Penalty for scoring an own goal
+            Debug.LogWarning("own goal. by " + lastAgentTouched.team);
         }
         else
         {
-            lastAgentTouched.AddReward(1); // Reward for scoring on the opposing goal
-            Debug.Log("Goal scored by " + lastAgentTouched.team);
+            lastAgentTouched.AddReward(1f); 
         }
 
         m_PurpleAgentGroup.EndGroupEpisode();
