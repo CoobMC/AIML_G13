@@ -103,28 +103,33 @@ public class AgentSoccer : Agent
         m_KickPower = 0f;
 
         var forwardAxis = act[0];
-        var rightAxis = act[1];
+        var lateralAxis = act[1];
         var rotateAxis = act[2];
 
         switch (forwardAxis)
         {
             case 1:
-                dirToGo = transform.forward * m_ForwardSpeed;
+                dirToGo += transform.forward * m_ForwardSpeed;
                 m_KickPower = 1f;
                 break;
             case 2:
-                dirToGo = transform.forward * -m_ForwardSpeed;
+                dirToGo += -transform.forward * m_ForwardSpeed;
                 break;
         }
 
-        switch (rightAxis)
+        switch (lateralAxis)
         {
             case 1:
-                dirToGo = transform.right * m_LateralSpeed;
+                dirToGo += transform.right * m_LateralSpeed;
                 break;
             case 2:
-                dirToGo = transform.right * -m_LateralSpeed;
+                dirToGo += -transform.right * m_LateralSpeed;
                 break;
+        }
+
+        if (dirToGo != Vector3.zero)
+        {
+            dirToGo.Normalize();
         }
 
         switch (rotateAxis)
@@ -138,8 +143,7 @@ public class AgentSoccer : Agent
         }
 
         transform.Rotate(rotateDir, Time.deltaTime * 100f);
-        agentRb.AddForce(dirToGo * m_SoccerSettings.agentRunSpeed,
-            ForceMode.VelocityChange);
+        agentRb.AddForce(dirToGo, ForceMode.VelocityChange);
     }
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
