@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Policies;
+using Unity.MLAgents.Sensors;
 
 public enum Team
 {
@@ -18,6 +20,18 @@ public class AgentSoccer : Agent
     // * wall
     // * own teammate
     // * opposing player
+
+    // Number of rays for forward raycasts
+    private int numRaycasts = 11;
+
+    // Length of the rays
+    private float rayLength = 10f;
+
+    // Queue to store past observations
+    private Queue<float[]> observationHistory;
+
+    // Number of past observations to store
+    public int observationHistorySize = 4;
 
     public enum Position
     {
@@ -61,6 +75,11 @@ public class AgentSoccer : Agent
         }
 
         m_BehaviorParameters = gameObject.GetComponent<BehaviorParameters>();
+        if (m_BehaviorParameters == null)
+        {
+            Debug.LogError("BehaviorParameters component is missing on the agent.");
+        }
+
         if (m_BehaviorParameters.TeamId == (int)Team.Blue)
         {
             team = Team.Blue;
@@ -89,10 +108,90 @@ public class AgentSoccer : Agent
             m_ForwardSpeed = 1.0f;
         }
         m_SoccerSettings = FindObjectOfType<SoccerSettings>();
+        if (m_SoccerSettings == null)
+        {
+            Debug.LogError("SoccerSettings object is missing in the scene.");
+        }
+
         agentRb = GetComponent<Rigidbody>();
+        if (agentRb == null)
+        {
+            Debug.LogError("Rigidbody component is missing from the agent!");
+        }
         agentRb.maxAngularVelocity = 500;
 
         m_ResetParams = Academy.Instance.EnvironmentParameters;
+        if (m_ResetParams == null)
+        {
+            Debug.LogError("EnvironmentParameters are not set in the Academy.");
+        }
+
+        observationHistory = new Queue<float[]>(observationHistorySize > 0 ? observationHistorySize : 1);
+    }
+
+    public override void CollectObservations(VectorSensor sensor)
+    {
+        if (sensor == null)
+        {
+            Debug.LogError("VectorSensor is null. Check BehaviorParameters and initialization.");
+            return;
+        }
+
+        // Log the current state of observation history
+        Debug.Log($"Observation history size: {observationHistory?.Count ?? 0}");
+
+        // Collect current observations
+        float[] currentObservations = GetCurrentObservations();
+        if (currentObservations == null)
+        {
+            Debug.LogError("GetCurrentObservations returned null!");
+            return;
+        }
+
+        Debug.Log($"Adding current observations: {string.Join(", ", currentObservations)}");
+        sensor.AddObservation(currentObservations);
+
+        // Add historical observations
+        foreach (var pastObservation in observationHistory)
+        {
+            if (pastObservation == null)
+            {
+                Debug.LogWarning("Past observation in history is null. Skipping...");
+                continue;
+            }
+            Debug.Log($"Adding historical observation: {string.Join(", ", pastObservation)}");
+            sensor.AddObservation(pastObservation);
+        }
+    }
+
+    private float[] GetCurrentObservations()
+    {
+        float[] observations = new float[numRaycasts];
+
+        float rayAngleStart = -60f; // Leftmost ray angle
+        float rayAngleEnd = 60f;    // Rightmost ray angle
+        float rayAngleIncrement = (rayAngleEnd - rayAngleStart) / (numRaycasts - 1);
+
+        for (int i = 0; i < numRaycasts; i++)
+        {
+            float angle = rayAngleStart + i * rayAngleIncrement;
+            Vector3 direction = Quaternion.Euler(0f, angle, 0f) * transform.forward;
+
+            RaycastHit hit;
+            if (Physics.Raycast(transform.position, direction, out hit, rayLength))
+            {
+                float normalizedDistance = hit.distance / rayLength;
+                observations[i] = normalizedDistance;
+                Debug.Log($"Ray {i} hit: {hit.collider.name}, Distance: {hit.distance}");
+            }
+            else
+            {
+                observations[i] = 1f; // Max distance if nothing is hit
+                Debug.Log($"Ray {i} did not hit anything.");
+            }
+        }
+
+        return observations;
     }
 
     public void MoveAgent(ActionSegment<int> act)

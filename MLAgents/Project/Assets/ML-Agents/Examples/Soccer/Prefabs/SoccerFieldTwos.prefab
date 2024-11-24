@@ -2277,6 +2277,7 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
+  observationHistorySize: 4
   team: 0
   position: 2
   agentRb: {fileID: 0}
@@ -2528,8 +2529,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 0
-    NumStackedVectorObservations: 1
+    VectorObservationSize: 336
+    NumStackedVectorObservations: 14
     m_ActionSpec:
       m_NumContinuousActions: 0
       BranchSizes: 030000000300000003000000
@@ -2562,6 +2563,7 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
+  observationHistorySize: 4
   team: 1
   position: 2
   agentRb: {fileID: 0}
@@ -4469,6 +4471,7 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
+  observationHistorySize: 4
   team: 0
   position: 2
   agentRb: {fileID: 0}
@@ -5008,6 +5011,7 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
+  observationHistorySize: 4
   team: 1
   position: 2
   agentRb: {fileID: 0}
