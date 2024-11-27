@@ -11,25 +11,9 @@ public enum Team
 
 public class AgentSoccer : Agent
 {
-    // Note that that the detectable tags are different for the blue and purple teams. The order is
-    // * ball
-    // * own goal
-    // * opposing goal
-    // * wall
-    // * own teammate
-    // * opposing player
-
-    public enum Position
-    {
-        Striker,
-        Goalie,
-        Generic
-    }
-
     [HideInInspector]
     public Team team;
     float m_KickPower;
-    // The coefficient for the reward for colliding with a ball. Set using curriculum.
     float m_BallTouch;
     public Position position;
 
@@ -38,15 +22,28 @@ public class AgentSoccer : Agent
     float m_LateralSpeed;
     float m_ForwardSpeed;
 
-
     [HideInInspector]
     public Rigidbody agentRb;
     SoccerSettings m_SoccerSettings;
     BehaviorParameters m_BehaviorParameters;
     public Vector3 initialPos;
     public float rotSign;
-
     EnvironmentParameters m_ResetParams;
+
+    // Walking sound variables
+    public AudioClip walkingSound1; // First step sound
+    public AudioClip walkingSound2; // Second step sound
+    private bool playFirstSound = true; // Track which sound to play
+    private float stepCooldown = 0.1f; // Time between steps (in seconds)
+    private float stepTimer = 0; // Timer for stepping
+    private AudioSource audioSource; // Reference to AudioSource
+
+    public enum Position
+    {
+        Striker,
+        Goalie,
+        Generic
+    }
 
     public override void Initialize()
     {
@@ -93,6 +90,9 @@ public class AgentSoccer : Agent
         agentRb.maxAngularVelocity = 500;
 
         m_ResetParams = Academy.Instance.EnvironmentParameters;
+
+        // Initialize audio source
+        audioSource = GetComponent<AudioSource>();
     }
 
     public void MoveAgent(ActionSegment<int> act)
@@ -100,7 +100,7 @@ public class AgentSoccer : Agent
         var dirToGo = Vector3.zero;
         var rotateDir = Vector3.zero;
 
-        m_KickPower = 0f;
+        //m_KickPower = 0f;
 
         var forwardAxis = act[0];
         var lateralAxis = act[1];
@@ -110,7 +110,7 @@ public class AgentSoccer : Agent
         {
             case 1:
                 dirToGo += transform.forward * m_ForwardSpeed;
-                m_KickPower = 1f;
+                //m_KickPower = 1f;
                 break;
             case 2:
                 dirToGo += -transform.forward * m_ForwardSpeed;
@@ -147,70 +147,16 @@ public class AgentSoccer : Agent
     }
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
-
     {
-
         if (position == Position.Goalie)
         {
-            // Existential bonus for Goalies.
             AddReward(m_Existential);
         }
         else if (position == Position.Striker)
         {
-            // Existential penalty for Strikers
             AddReward(-m_Existential);
         }
         MoveAgent(actionBuffers.DiscreteActions);
-    }
-
-    public override void Heuristic(in ActionBuffers actionsOut)
-    {
-        var discreteActionsOut = actionsOut.DiscreteActions;
-        //forward
-        if (Input.GetKey(KeyCode.W))
-        {
-            discreteActionsOut[0] = 1;
-        }
-        if (Input.GetKey(KeyCode.S))
-        {
-            discreteActionsOut[0] = 2;
-        }
-        //rotate
-        if (Input.GetKey(KeyCode.A))
-        {
-            discreteActionsOut[2] = 1;
-        }
-        if (Input.GetKey(KeyCode.D))
-        {
-            discreteActionsOut[2] = 2;
-        }
-        //right
-        if (Input.GetKey(KeyCode.E))
-        {
-            discreteActionsOut[1] = 1;
-        }
-        if (Input.GetKey(KeyCode.Q))
-        {
-            discreteActionsOut[1] = 2;
-        }
-    }
-    /// <summary>
-    /// Used to provide a "kick" to the ball.
-    /// </summary>
-    void OnCollisionEnter(Collision c)
-    {
-        var force = k_Power * m_KickPower;
-        if (position == Position.Goalie)
-        {
-            force = k_Power;
-        }
-        if (c.gameObject.CompareTag("ball"))
-        {
-            AddReward(.2f * m_BallTouch);
-            var dir = c.contacts[0].point - transform.position;
-            dir = dir.normalized;
-            c.gameObject.GetComponent<Rigidbody>().AddForce(dir * force);
-        }
     }
 
     public override void OnEpisodeBegin()
@@ -218,4 +164,48 @@ public class AgentSoccer : Agent
         m_BallTouch = m_ResetParams.GetWithDefault("ball_touch", 0);
     }
 
+     void FixedUpdate()
+    {
+        // Check agent velocity
+        float velocityMagnitude = agentRb.velocity.magnitude;
+
+        if (velocityMagnitude > 0.3f) // Movement threshold
+        {
+            stepTimer -= Time.fixedDeltaTime;
+
+            if (stepTimer <= 0)
+            {
+                // Alternate between the two sounds
+                if (!audioSource.isPlaying)
+                {
+                    if (playFirstSound && walkingSound1 != null)
+                    {
+                        audioSource.clip = walkingSound1;
+                    }
+                    else if (walkingSound2 != null)
+                    {
+                        audioSource.clip = walkingSound2;
+                    }
+
+                    audioSource.Play();
+
+                    // Toggle sound for next step
+                    playFirstSound = !playFirstSound;
+
+                    // Set a cooldown time between steps
+                    stepCooldown = Mathf.Clamp(0.2f / velocityMagnitude, 0.2f, 1.0f); // Adjust range for timing
+                    stepTimer = stepCooldown;
+                }
+            }
+        }
+        else
+        {
+            if (audioSource.isPlaying)
+            {
+                audioSource.Stop();
+            }
+
+            stepTimer = 0; // Reset the timer
+        }
+    }
 }
