@@ -133,36 +133,39 @@ public class AgentSoccer : Agent
     {
         if (sensor == null)
         {
-            Debug.LogError("VectorSensor is null. Check BehaviorParameters and initialization.");
+            Debug.LogError("VectorSensor is null. Ensure it is correctly set up in the Behavior Parameters.");
             return;
         }
-
-        // Log the current state of observation history
-        Debug.Log($"Observation history size: {observationHistory?.Count ?? 0}");
 
         // Collect current observations
         float[] currentObservations = GetCurrentObservations();
-        if (currentObservations == null)
+        if (currentObservations != null)
         {
-            Debug.LogError("GetCurrentObservations returned null!");
-            return;
+            sensor.AddObservation(currentObservations);
         }
-
-        Debug.Log($"Adding current observations: {string.Join(", ", currentObservations)}");
-        sensor.AddObservation(currentObservations);
+        else
+        {
+            Debug.LogWarning("Current observations are null.");
+        }
 
         // Add historical observations
         foreach (var pastObservation in observationHistory)
         {
-            if (pastObservation == null)
+            if (pastObservation != null)
             {
-                Debug.LogWarning("Past observation in history is null. Skipping...");
-                continue;
+                sensor.AddObservation(pastObservation);
             }
-            Debug.Log($"Adding historical observation: {string.Join(", ", pastObservation)}");
-            sensor.AddObservation(pastObservation);
+            else
+            {
+                Debug.LogWarning("A past observation is null, skipping...");
+            }
         }
+
+        //Debug.Log($"Observation history size: {observationHistory.Count}");
     }
+
+
+
 
     private float[] GetCurrentObservations()
     {
@@ -182,12 +185,12 @@ public class AgentSoccer : Agent
             {
                 float normalizedDistance = hit.distance / rayLength;
                 observations[i] = normalizedDistance;
-                Debug.Log($"Ray {i} hit: {hit.collider.name}, Distance: {hit.distance}");
+                //Debug.Log($"Ray {i} hit: {hit.collider.name}, Distance: {hit.distance}");
             }
             else
             {
                 observations[i] = 1f; // Max distance if nothing is hit
-                Debug.Log($"Ray {i} did not hit anything.");
+                //Debug.Log($"Ray {i} did not hit anything.");
             }
         }
 
@@ -298,17 +301,32 @@ public class AgentSoccer : Agent
     /// </summary>
     void OnCollisionEnter(Collision c)
     {
-        var force = k_Power * m_KickPower;
-        if (position == Position.Goalie)
-        {
-            force = k_Power;
-        }
         if (c.gameObject.CompareTag("ball"))
         {
+            if (c.gameObject == null)
+            {
+                Debug.LogWarning("Ball object is null, skipping collision handling.");
+                return;
+            }
+
+            var force = k_Power * m_KickPower;
+            if (position == Position.Goalie)
+            {
+                force = k_Power;
+            }
+
             AddReward(.2f * m_BallTouch);
             var dir = c.contacts[0].point - transform.position;
             dir = dir.normalized;
-            c.gameObject.GetComponent<Rigidbody>().AddForce(dir * force);
+            Rigidbody ballRb = c.gameObject.GetComponent<Rigidbody>();
+            if (ballRb != null)
+            {
+                ballRb.AddForce(dir * force);
+            }
+            else
+            {
+                Debug.LogWarning("Ball Rigidbody is missing or null.");
+            }
         }
     }
 
