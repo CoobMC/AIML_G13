@@ -141,14 +141,22 @@ public class AgentSoccer : Agent
         float[] currentObservations = GetCurrentObservations();
         if (currentObservations != null)
         {
+            // Add the current observations to the sensor
             sensor.AddObservation(currentObservations);
+
+            // Add the current observations to the history queue
+            if (observationHistory.Count >= observationHistorySize)
+            {
+                observationHistory.Dequeue(); // Remove the oldest observation
+            }
+            observationHistory.Enqueue(currentObservations); // Add the latest observation
         }
         else
         {
             Debug.LogWarning("Current observations are null.");
         }
 
-        // Add historical observations
+        // Add historical observations to the sensor
         foreach (var pastObservation in observationHistory)
         {
             if (pastObservation != null)
@@ -163,6 +171,7 @@ public class AgentSoccer : Agent
 
         //Debug.Log($"Observation history size: {observationHistory.Count}");
     }
+
 
 
 
@@ -322,10 +331,6 @@ public class AgentSoccer : Agent
             if (ballRb != null)
             {
                 ballRb.AddForce(dir * force);
-            }
-            else
-            {
-                Debug.LogWarning("Ball Rigidbody is missing or null.");
             }
         }
     }
