@@ -15,6 +15,8 @@ behaviors:
       hidden_units: 512
       num_layers: 2
       vis_encode_type: simple
+      use_recurrent: true       # Enable memory
+      memory_size: 128          # Adjust as needed (must match your model configuration)
     reward_signals:
       extrinsic:
         gamma: 0.99
