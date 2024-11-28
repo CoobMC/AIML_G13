@@ -126,7 +126,13 @@ public class AgentSoccer : Agent
             Debug.LogError("EnvironmentParameters are not set in the Academy.");
         }
 
-        observationHistory = new Queue<float[]>(observationHistorySize > 0 ? observationHistorySize : 1);
+        observationHistory = new Queue<float[]>(observationHistorySize);
+
+        if (observationHistorySize <= 0)
+        {
+            observationHistorySize = 1;
+            Debug.LogWarning("Observation history size set to default of 1.");
+        }
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -141,6 +147,11 @@ public class AgentSoccer : Agent
         float[] currentObservations = GetCurrentObservations();
         if (currentObservations != null)
         {
+            if (currentObservations.Length != numRaycasts)
+            {
+                Debug.LogError($"Mismatch in observation size. Expected: {numRaycasts}, Received: {currentObservations.Length}");
+                return;
+            }
             // Add the current observations to the sensor
             sensor.AddObservation(currentObservations);
 
@@ -172,12 +183,20 @@ public class AgentSoccer : Agent
         //Debug.Log($"Observation history size: {observationHistory.Count}");
     }
 
-
-
-
-
     private float[] GetCurrentObservations()
     {
+        if (numRaycasts <= 0)
+        {
+            Debug.LogError("Number of raycasts must be greater than 0.");
+            return null;
+        }
+
+        if (rayLength <= 0f)
+        {
+            Debug.LogError("Ray length must be positive.");
+            return null;
+        }
+
         float[] observations = new float[numRaycasts];
 
         float rayAngleStart = -60f; // Leftmost ray angle
