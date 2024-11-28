@@ -38,7 +38,7 @@ public class AgentSoccer : Agent
     private float stepCooldown = 0.1f; // Time between steps (in seconds)
     private float stepTimer = 0; // Timer for stepping
     private AudioSource audioSource; // Reference to AudioSource
-    private RayPerceptionSensorComponent3D soundSensor;
+    public RayPerceptionSensorComponent3D soundSensor;
 
     public enum Position
     {
@@ -95,17 +95,8 @@ public class AgentSoccer : Agent
 
         // Initialize audio source
         audioSource = GetComponent<AudioSource>();
-        RayPerceptionSensorComponent3D[] sensors = GetComponents<RayPerceptionSensorComponent3D>();
+        soundSensor.enabled = false;
 
-        // Find the one with the specific name
-        foreach (var sensor in sensors)
-        {
-            if (sensor.name == "soundSensor") // Replace with the actual name
-            {
-                soundSensor = sensor;
-                break;
-            }
-        }
     }
 
     public void MoveAgent(ActionSegment<int> act)
@@ -201,7 +192,7 @@ public class AgentSoccer : Agent
                     }
 
                     audioSource.Play();
-                    //soundSensor.enabled = true;
+                    
 
                     // Toggle sound for next step
                     playFirstSound = !playFirstSound;
