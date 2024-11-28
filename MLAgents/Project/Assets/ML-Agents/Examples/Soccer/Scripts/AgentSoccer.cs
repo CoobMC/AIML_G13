@@ -145,41 +145,47 @@ public class AgentSoccer : Agent
 
         // Collect current observations
         float[] currentObservations = GetCurrentObservations();
-        if (currentObservations != null)
+        if (currentObservations != null && currentObservations.Length == numRaycasts)
         {
-            if (currentObservations.Length != numRaycasts)
-            {
-                Debug.LogError($"Mismatch in observation size. Expected: {numRaycasts}, Received: {currentObservations.Length}");
-                return;
-            }
-            // Add the current observations to the sensor
-            sensor.AddObservation(currentObservations);
 
-            // Add the current observations to the history queue
-            if (observationHistory.Count >= observationHistorySize)
+            if (currentObservations != null)
             {
-                observationHistory.Dequeue(); // Remove the oldest observation
-            }
-            observationHistory.Enqueue(currentObservations); // Add the latest observation
-        }
-        else
-        {
-            Debug.LogWarning("Current observations are null.");
-        }
+                if (currentObservations.Length != numRaycasts)
+                {
+                    Debug.LogError(
+                        $"Mismatch in observation size. Expected: {numRaycasts}, Received: {currentObservations.Length}");
+                    return;
+                }
 
-        // Add historical observations to the sensor
-        foreach (var pastObservation in observationHistory)
-        {
-            if (pastObservation != null)
-            {
-                sensor.AddObservation(pastObservation);
+                // Add the current observations to the sensor
+                sensor.AddObservation(currentObservations);
+
+                // Add the current observations to the history queue
+                if (observationHistory.Count >= observationHistorySize)
+                {
+                    observationHistory.Dequeue(); // Remove the oldest observation
+                }
+
+                observationHistory.Enqueue(currentObservations); // Add the latest observation
             }
             else
             {
-                Debug.LogWarning("A past observation is null, skipping...");
+                Debug.LogWarning("Current observations are null.");
+            }
+
+            // Add historical observations to the sensor
+            foreach (var pastObservation in observationHistory)
+            {
+                if (pastObservation != null)
+                {
+                    sensor.AddObservation(pastObservation);
+                }
+                else
+                {
+                    Debug.LogWarning("A past observation is null, skipping...");
+                }
             }
         }
-
         //Debug.Log($"Observation history size: {observationHistory.Count}");
     }
 
