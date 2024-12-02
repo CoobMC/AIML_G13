@@ -2,7 +2,6 @@ using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Policies;
-using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Sensors;      // Observation handling (e.g., VectorSensor)
 using System.Collections.Generic;  // Data structures like Queue for observation history
 
