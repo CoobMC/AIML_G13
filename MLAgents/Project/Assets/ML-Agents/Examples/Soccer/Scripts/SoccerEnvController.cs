@@ -2,6 +2,13 @@ using System.Collections.Generic;
 using Unity.MLAgents;
 using UnityEngine;
 
+public enum FieldZone
+{
+    PurpleGoal,
+    BlueGoal,
+    Middle
+}
+
 public class SoccerEnvController : MonoBehaviour
 {
     [System.Serializable]
@@ -16,46 +23,47 @@ public class SoccerEnvController : MonoBehaviour
         public Rigidbody Rb;
     }
 
-
     /// <summary>
     /// Max Academy steps before this platform resets
     /// </summary>
-    /// <returns></returns>
     [Tooltip("Max Environment Steps")] public int MaxEnvironmentSteps = 25000;
-
-    /// <summary>
-    /// The area bounds.
-    /// </summary>
-
-    /// <summary>
-    /// We will be changing the ground material based on success/failue
-    /// </summary>
 
     public GameObject ball;
     [HideInInspector]
     public Rigidbody ballRb;
     Vector3 m_BallStartingPos;
 
-    //List of Agents On Platform
+    // List of Agents On Platform
     public List<PlayerInfo> AgentsList = new List<PlayerInfo>();
 
     private SoccerSettings m_SoccerSettings;
-
 
     private SimpleMultiAgentGroup m_BlueAgentGroup;
     private SimpleMultiAgentGroup m_PurpleAgentGroup;
 
     private int m_ResetTimer;
 
+    // === Task 1: Possession Tracking Variables ===
+    private AgentSoccer lastPlayer = null;
+    private AgentSoccer currentPlayer = null;
+    // =============================================
+
+    // === Task 2: Pass Detection Variables ===
+    private bool passBeforeGoal = false;
+    // Define goal lines to determine ball zones
+    public float purpleGoalLineX = 6f;  // Adjust based on your field dimensions
+    public float blueGoalLineX = -6f;   // Adjust based on your field dimensions
+    // =======================================
+
     void Start()
     {
-
         m_SoccerSettings = FindObjectOfType<SoccerSettings>();
         // Initialize TeamManager
         m_BlueAgentGroup = new SimpleMultiAgentGroup();
         m_PurpleAgentGroup = new SimpleMultiAgentGroup();
         ballRb = ball.GetComponent<Rigidbody>();
         m_BallStartingPos = new Vector3(ball.transform.position.x, ball.transform.position.y, ball.transform.position.z);
+
         foreach (var item in AgentsList)
         {
             item.StartingPos = item.Agent.transform.position;
@@ -84,7 +92,6 @@ public class SoccerEnvController : MonoBehaviour
         }
     }
 
-
     public void ResetBall()
     {
         var randomPosX = Random.Range(-2.5f, 2.5f);
@@ -93,7 +100,6 @@ public class SoccerEnvController : MonoBehaviour
         ball.transform.position = m_BallStartingPos + new Vector3(randomPosX, 0f, randomPosZ);
         ballRb.velocity = Vector3.zero;
         ballRb.angularVelocity = Vector3.zero;
-
     }
 
     public void GoalTouched(Team scoredTeam)
@@ -105,29 +111,39 @@ public class SoccerEnvController : MonoBehaviour
             audioSource.Play();
         }
 
+        // === Task 2: Modify rewards to include pass bonus ===
+        // Base reward calculation
+        float baseReward = Mathf.Max((2f - (float)m_ResetTimer / MaxEnvironmentSteps), 1f);
+
+        // Bonus for passing before the goal
+        float passBonus = passBeforeGoal ? 0.5f : 0f;
+
         if (scoredTeam == Team.Blue)
         {
-            m_BlueAgentGroup.AddGroupReward(1 - (float)m_ResetTimer / MaxEnvironmentSteps);
+            m_BlueAgentGroup.AddGroupReward(baseReward + passBonus);
             m_PurpleAgentGroup.AddGroupReward(-1);
         }
         else
         {
-            m_PurpleAgentGroup.AddGroupReward(1 - (float)m_ResetTimer / MaxEnvironmentSteps);
+            m_PurpleAgentGroup.AddGroupReward(baseReward + passBonus);
             m_BlueAgentGroup.AddGroupReward(-1);
         }
+        // ================================================
 
         m_PurpleAgentGroup.EndGroupEpisode();
         m_BlueAgentGroup.EndGroupEpisode();
         ResetScene();
     }
 
-
-
     public void ResetScene()
     {
         m_ResetTimer = 0;
 
-        //Reset Agents
+        // === Task 2: Reset pass flag ===
+        ResetPassOccurred();
+        // ===============================
+
+        // Reset Agents
         foreach (var item in AgentsList)
         {
             var randomPosX = Random.Range(-5f, 5f);
@@ -140,7 +156,56 @@ public class SoccerEnvController : MonoBehaviour
             item.Rb.angularVelocity = Vector3.zero;
         }
 
-        //Reset Ball
+        // Reset Ball
         ResetBall();
     }
+
+    // === Task 1: Possession Tracking Methods ===
+    public AgentSoccer GetCurrentPossessor()
+    {
+        return currentPlayer;
+    }
+
+    public void SetCurrentPossessor(AgentSoccer player)
+    {
+        currentPlayer = player;
+        Debug.Log($"Current Possessor: {(player != null ? player.name : "None")}");
+    }
+
+    public AgentSoccer GetLastPossessor()
+    {
+        return lastPlayer;
+    }
+
+    public void SetLastPossessor(AgentSoccer player)
+    {
+        lastPlayer = player;
+        Debug.Log($"Last Possessor: {(player != null ? player.name : "None")}");
+    }
+    // ===========================================
+
+    // === Task 2: Pass Detection Methods ===
+    public void SetPassOccurred()
+    {
+        passBeforeGoal = true;
+    }
+
+    public void ResetPassOccurred()
+    {
+        passBeforeGoal = false;
+    }
+
+    public FieldZone GetBallZone()
+    {
+        if (ball.transform.position.x > purpleGoalLineX)
+        {
+            return FieldZone.PurpleGoal;
+        }
+        if (ball.transform.position.x < blueGoalLineX)
+        {
+            return FieldZone.BlueGoal;
+        }
+        return FieldZone.Middle;
+    }
+    // =======================================
 }

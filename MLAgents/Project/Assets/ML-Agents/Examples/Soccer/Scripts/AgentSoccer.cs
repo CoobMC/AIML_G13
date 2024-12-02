@@ -40,6 +40,9 @@ public class AgentSoccer : Agent
     private AudioSource audioSource; // Reference to AudioSource
     public RayPerceptionSensorComponent3D soundSensor;
 
+    // Reference to SoccerEnvController (Class-level variable)
+    private SoccerEnvController envController;
+
     public enum Position
     {
         Striker,
@@ -49,7 +52,9 @@ public class AgentSoccer : Agent
 
     public override void Initialize()
     {
-        SoccerEnvController envController = GetComponentInParent<SoccerEnvController>();
+        // Correctly assign the class-level envController
+        envController = GetComponentInParent<SoccerEnvController>();
+
         if (envController != null)
         {
             m_Existential = 1f / envController.MaxEnvironmentSteps;
@@ -57,6 +62,7 @@ public class AgentSoccer : Agent
         else
         {
             m_Existential = 1f / MaxStep;
+            Debug.LogError("SoccerEnvController not found in parent!");
         }
 
         m_BehaviorParameters = gameObject.GetComponent<BehaviorParameters>();
@@ -95,8 +101,20 @@ public class AgentSoccer : Agent
 
         // Initialize audio source
         audioSource = GetComponent<AudioSource>();
-        soundSensor.enabled = false;
+        if (audioSource == null)
+        {
+            Debug.LogWarning("AudioSource component not found on AgentSoccer GameObject.");
+        }
 
+        // Ensure soundSensor is assigned
+        if (soundSensor != null)
+        {
+            soundSensor.enabled = false;
+        }
+        else
+        {
+            Debug.LogWarning("soundSensor is not assigned in the Inspector.");
+        }
     }
 
     public void MoveAgent(ActionSegment<int> act)
@@ -104,7 +122,7 @@ public class AgentSoccer : Agent
         var dirToGo = Vector3.zero;
         var rotateDir = Vector3.zero;
 
-        //m_KickPower = 0f;
+        m_KickPower = 0f;
 
         var forwardAxis = act[0];
         var lateralAxis = act[1];
@@ -114,7 +132,7 @@ public class AgentSoccer : Agent
         {
             case 1:
                 dirToGo += transform.forward * m_ForwardSpeed;
-                //m_KickPower = 1f;
+                m_KickPower = 1f; // Ready to kick when moving forward
                 break;
             case 2:
                 dirToGo += -transform.forward * m_ForwardSpeed;
@@ -168,7 +186,7 @@ public class AgentSoccer : Agent
         m_BallTouch = m_ResetParams.GetWithDefault("ball_touch", 0);
     }
 
-     void FixedUpdate()
+    void FixedUpdate()
     {
         // Check agent velocity
         float velocityMagnitude = agentRb.velocity.magnitude;
@@ -192,7 +210,6 @@ public class AgentSoccer : Agent
                     }
 
                     audioSource.Play();
-                    
 
                     // Toggle sound for next step
                     playFirstSound = !playFirstSound;
@@ -212,5 +229,55 @@ public class AgentSoccer : Agent
 
             stepTimer = 0; // Reset the timer
         }
+    }
+
+    /// <summary>
+    /// Handles collision events with other objects.
+    /// Specifically updates possession when colliding with the ball.
+    /// </summary>
+    /// <param name="c">Collision information.</param>
+    void OnCollisionEnter(Collision c)
+    {
+        // Check if the collided object is the ball
+        if (c.gameObject.CompareTag("ball"))
+        {
+            // Reward for touching the ball
+            AddReward(0.5f * m_BallTouch);
+
+            // Calculate and apply force to the ball
+            var dir = c.contacts[0].point - transform.position;
+            dir = dir.normalized;
+            c.gameObject.GetComponent<Rigidbody>().AddForce(dir * k_Power * m_KickPower);
+
+            // === Task 1: Update Possession Tracking ===
+            if (envController != null)
+            {
+                AgentSoccer previousPlayer = envController.GetCurrentPossessor();
+                envController.SetLastPossessor(previousPlayer);
+                envController.SetCurrentPossessor(this);
+
+                // === Task 2: Pass Detection and Rewards ===
+                if (previousPlayer != null && previousPlayer != this)
+                {
+                    if (previousPlayer.team == team)
+                    {
+                        // Successful pass to a teammate
+                        AddReward(0.1f);
+                        envController.SetPassOccurred();
+                    }
+                    else
+                    {
+                        // Ball taken from opponent
+                        AddReward(0.2f);
+                        envController.ResetPassOccurred();
+                    }
+                }
+                // ==========================================
+            }
+            // ===========================================
+        }
+
+        // Handle collisions with goals or other objects if necessary
+        // Existing collision handling code...
     }
 }
