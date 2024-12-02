@@ -1,0 +1,49 @@
+behaviors:
+  SoccerTwos:
+    trainer_type: poca
+    hyperparameters:
+      batch_size: 4096
+      buffer_size: 32768
+      learning_rate: 0.0002
+      beta: 0.01
+      epsilon: 0.15
+      lambd: 0.92
+      num_epoch: 4
+      learning_rate_schedule: linear
+      beta_schedule: linear
+      epsilon_schedule: linear
+    network_settings:
+      normalize: true
+      hidden_units: 512
+      num_layers: 2
+      vis_encode_type: simple
+      memory: None
+      goal_conditioning_type: hyper
+      deterministic: false
+    reward_signals:
+      extrinsic:
+        gamma: 0.99
+        strength: 1.0
+        network_settings:
+          normalize: false
+          hidden_units: 128
+          num_layers: 2
+          vis_encode_type: simple
+          memory: None
+          goal_conditioning_type: hyper
+          deterministic: false
+    keep_checkpoints: 5
+    checkpoint_interval: 500000
+    even_checkpoints: false
+    max_steps: 20000000
+    time_horizon: 1000
+    summary_freq: 10000
+    threaded: false
+    self_play:
+      save_steps: 100000
+      team_change: 400000
+      swap_steps: 4000
+      window: 20
+      play_against_latest_model_ratio: 0.7
+      initial_elo: 1200.0
+    behavioral_cloning: None
