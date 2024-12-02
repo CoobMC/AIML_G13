@@ -98,6 +98,13 @@ public class SoccerEnvController : MonoBehaviour
 
     public void GoalTouched(Team scoredTeam)
     {
+        // Play goal sound
+        var audioSource = ball.GetComponent<AudioSource>();
+        if (audioSource != null)
+        {
+            audioSource.Play();
+        }
+
         if (scoredTeam == Team.Blue)
         {
             m_BlueAgentGroup.AddGroupReward(1 - (float)m_ResetTimer / MaxEnvironmentSteps);
@@ -108,11 +115,12 @@ public class SoccerEnvController : MonoBehaviour
             m_PurpleAgentGroup.AddGroupReward(1 - (float)m_ResetTimer / MaxEnvironmentSteps);
             m_BlueAgentGroup.AddGroupReward(-1);
         }
+
         m_PurpleAgentGroup.EndGroupEpisode();
         m_BlueAgentGroup.EndGroupEpisode();
         ResetScene();
-
     }
+
 
 
     public void ResetScene()
