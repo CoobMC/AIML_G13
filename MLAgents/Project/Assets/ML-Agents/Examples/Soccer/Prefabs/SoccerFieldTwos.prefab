@@ -2282,6 +2282,9 @@ MonoBehaviour:
   agentRb: {fileID: 0}
   initialPos: {x: 0, y: 0, z: 0}
   rotSign: 0
+  observationHistorySize: 4
+  ballTransform: {fileID: 4540201673231058}
+  maxDistanceToBall: 10
 --- !u!114 &114320493772006642
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2567,6 +2570,9 @@ MonoBehaviour:
   agentRb: {fileID: 0}
   initialPos: {x: 0, y: 0, z: 0}
   rotSign: 0
+  observationHistorySize: 4
+  ballTransform: {fileID: 4540201673231058}
+  maxDistanceToBall: 10
 --- !u!114 &114516244030127556
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4474,6 +4480,9 @@ MonoBehaviour:
   agentRb: {fileID: 0}
   initialPos: {x: 0, y: 0, z: 0}
   rotSign: 0
+  observationHistorySize: 4
+  ballTransform: {fileID: 4540201673231058}
+  maxDistanceToBall: 10
 --- !u!114 &1023485123796557062
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5013,6 +5022,9 @@ MonoBehaviour:
   agentRb: {fileID: 0}
   initialPos: {x: 0, y: 0, z: 0}
   rotSign: 0
+  observationHistorySize: 4
+  ballTransform: {fileID: 4540201673231058}
+  maxDistanceToBall: 10
 --- !u!114 &2562571719799803906
 MonoBehaviour:
   m_ObjectHideFlags: 0

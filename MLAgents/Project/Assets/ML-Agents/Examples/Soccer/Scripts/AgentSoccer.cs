@@ -57,6 +57,9 @@ public class AgentSoccer : Agent
     // Number of past observations to store
     public int observationHistorySize = 4;
 
+    public Transform ballTransform;  // Reference to the ball's Transform
+    public float maxDistanceToBall = 10f;  // Maximum distance for normalizing proximity reward
+
     public override void Initialize()
     {
         SoccerEnvController envController = GetComponentInParent<SoccerEnvController>();
@@ -123,44 +126,32 @@ public class AgentSoccer : Agent
             return;
         }
 
-        if (observationHistory == null)
-        {
-            Debug.LogError("observationHistory is null. Check if Initialize() is called properly.");
-            return;
-        }
+        // Current relative position of the ball
+        Vector3 relativeBallPosition = ballTransform.position - transform.position;
+        sensor.AddObservation(relativeBallPosition);
 
-        // Collect the current observations
+        // Add current and historical raycast observations
         float[] currentObservations = GetCurrentObservations();
-
         if (currentObservations == null || currentObservations.Length == 0)
         {
             Debug.LogError("GetCurrentObservations returned null or empty array.");
             return;
         }
 
-        // Add the current observations to the sensor
         sensor.AddObservation(currentObservations);
 
-        // Enforce the size constraint of the observation history
+        // Enforce observation history size
         if (observationHistory.Count >= observationHistorySize)
         {
             observationHistory.Dequeue(); // Remove the oldest observation
         }
 
-        // Add the current observations to the history queue
         observationHistory.Enqueue(currentObservations);
 
-        // Add past observations to the sensor
+        // Add historical observations to the sensor
         foreach (var pastObservation in observationHistory)
         {
-            if (pastObservation != null)
-            {
-                sensor.AddObservation(pastObservation);
-            }
-            else
-            {
-                Debug.LogWarning("A past observation is null, skipping...");
-            }
+            sensor.AddObservation(pastObservation);
         }
     }
 
@@ -246,8 +237,10 @@ public class AgentSoccer : Agent
     }
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
-
     {
+        // TODO Proximity reward: Encourage the agent to stay close to the ball
+        float distanceToBall = Vector3.Distance(transform.position, ballTransform.position);
+        AddReward(1f - Mathf.Clamp01(distanceToBall / maxDistanceToBall));
 
         if (position == Position.Goalie)
         {
@@ -314,7 +307,16 @@ public class AgentSoccer : Agent
 
     public override void OnEpisodeBegin()
     {
+        // Reset ball position
+        ballTransform.position = new Vector3(0, 0.5f, 0);
+
+        // Reset agent's position
+        transform.position = initialPos;
+        transform.rotation = Quaternion.Euler(0, 0, 0);
+        agentRb.velocity = Vector3.zero;
+        agentRb.angularVelocity = Vector3.zero;
+
+        // Reset any additional variables
         m_BallTouch = m_ResetParams.GetWithDefault("ball_touch", 0);
     }
-
 }
