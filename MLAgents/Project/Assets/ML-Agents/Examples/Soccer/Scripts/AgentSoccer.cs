@@ -39,7 +39,7 @@ public class AgentSoccer : Agent
     private float stepCooldown = 0.1f; // Time between steps (in seconds)
     private float stepTimer = 0; // Timer for stepping
     private AudioSource audioSource; // Reference to AudioSource
-    public RayPerceptionSensorComponent3D soundSensor;
+    private RayPerceptionSensorComponent3D soundSensor;
 
     public enum Position
     {
@@ -102,97 +102,17 @@ public class AgentSoccer : Agent
 
         // Initialize audio source
         audioSource = GetComponent<AudioSource>();
-        soundSensor.enabled = false;
+        RayPerceptionSensorComponent3D[] sensors = GetComponents<RayPerceptionSensorComponent3D>();
 
-        // TODO
-        // Initialize the observation history queue
-        observationHistory = new Queue<float[]>();
-
-        // Validate the observation history size
-        if (observationHistorySize <= 0)
+        // Find the one with the specific name
+        foreach (var sensor in sensors)
         {
-            observationHistorySize = 1; // Default to 1 if invalid
-            Debug.LogWarning("Observation history size set to default of 1.");
-        }
-    }
-
-    public override void CollectObservations(VectorSensor sensor)
-    {
-        if (sensor == null)
-        {
-            Debug.LogError("VectorSensor is null. Ensure Vector Observation Space Size is set correctly in Behavior Parameters.");
-            return;
-        }
-
-        if (observationHistory == null)
-        {
-            Debug.LogError("observationHistory is null. Check if Initialize() is called properly.");
-            return;
-        }
-
-        // Collect the current observations
-        float[] currentObservations = GetCurrentObservations();
-
-        if (currentObservations == null || currentObservations.Length == 0)
-        {
-            Debug.LogError("GetCurrentObservations returned null or empty array.");
-            return;
-        }
-
-        // Add the current observations to the sensor
-        sensor.AddObservation(currentObservations);
-
-        // Enforce the size constraint of the observation history
-        if (observationHistory.Count >= observationHistorySize)
-        {
-            observationHistory.Dequeue(); // Remove the oldest observation
-        }
-
-        // Add the current observations to the history queue
-        observationHistory.Enqueue(currentObservations);
-
-        // Add past observations to the sensor
-        foreach (var pastObservation in observationHistory)
-        {
-            if (pastObservation != null)
+            if (sensor.name == "soundSensor") // Replace with the actual name
             {
-                sensor.AddObservation(pastObservation);
-            }
-            else
-            {
-                Debug.LogWarning("A past observation is null, skipping...");
+                soundSensor = sensor;
+                break;
             }
         }
-    }
-
-    private float[] GetCurrentObservations()
-    {
-        int numRaycasts = 5; // Rays Per Direction from Ray Perception Sensor
-        float rayLength = 20f; // Ray Length from Ray Perception Sensor
-        float rayAngleStart = -60f; // Maximum Ray Degrees (Half the Field of View)
-        float rayAngleEnd = 60f;
-        float rayAngleIncrement = (rayAngleEnd - rayAngleStart) / (numRaycasts - 1); // Increment per ray
-
-        float[] observations = new float[numRaycasts]; // Array to hold raycast distances
-
-        for (int i = 0; i < numRaycasts; i++)
-        {
-            float angle = rayAngleStart + i * rayAngleIncrement;
-            Vector3 direction = Quaternion.Euler(0f, angle, 0f) * transform.forward;
-
-            // Perform the raycast
-            if (Physics.Raycast(transform.position + new Vector3(0, 0.5f, 0), direction, out RaycastHit hit, rayLength)) // Start Vertical Offset = 0.5
-            {
-                float normalizedDistance = hit.distance / rayLength; // Normalize distance to [0, 1]
-                observations[i] = normalizedDistance;
-            }
-            else
-            {
-                observations[i] = 1f; // Maximum distance (no hit)
-            }
-        }
-
-        return observations;
     }
 
     public void MoveAgent(ActionSegment<int> act)
@@ -288,7 +208,7 @@ public class AgentSoccer : Agent
                     }
 
                     audioSource.Play();
-                    
+                    //soundSensor.enabled = true;
 
                     // Toggle sound for next step
                     playFirstSound = !playFirstSound;
