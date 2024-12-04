@@ -1,10 +1,13 @@
 fileFormatVersion: 2
 guid: 2a2688ef4a36349f9aa010020c32d198
-timeCreated: 1506829537
-licenseType: Pro
 MonoImporter:
+  externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - agentRb: {instanceID: 0}
+  - walkingSound1: {fileID: 8300000, guid: 4a38df790ebe70a4db1d9036fefda641, type: 3}
+  - walkingSound2: {fileID: 8300000, guid: 8a4369ca6aa7348469f391a3c0fc0149, type: 3}
+  - soundSensor: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
