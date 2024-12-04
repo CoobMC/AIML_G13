@@ -2,6 +2,7 @@ using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Policies;
+using Unity.MLAgents.Sensors;
 
 public enum Team
 {
@@ -50,6 +51,18 @@ public class AgentSoccer : Agent
 
     public override void Initialize()
     {
+		RayPerceptionSensorComponent3D[] sensors = GetComponents<RayPerceptionSensorComponent3D>();
+
+        if (sensors.Length > 1)
+        {
+
+			// Set the ray length to 0 for this sensor
+			sensors[1].RayLength = 0;
+        }
+        else
+        {
+            Debug.LogError("Less than 2 RayPerceptionSensor3D components found!");
+        }
         SoccerEnvController envController = GetComponentInParent<SoccerEnvController>();
         if (envController != null)
         {
