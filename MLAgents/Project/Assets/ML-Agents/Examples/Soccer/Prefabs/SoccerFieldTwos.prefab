@@ -2246,9 +2246,9 @@ MonoBehaviour:
     VectorObservationSize: 0
     NumStackedVectorObservations: 1
     m_ActionSpec:
-      m_NumContinuousActions: 0
+      m_NumContinuousActions: 29
       BranchSizes: 030000000300000003000000
-    VectorActionSize: 030000000300000003000000
+    VectorActionSize: 
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
@@ -2282,6 +2282,12 @@ MonoBehaviour:
   agentRb: {fileID: 0}
   initialPos: {x: 0, y: 0, z: 0}
   rotSign: 0
+  walkingSound1: {fileID: 8300000, guid: c64b2e272b659964c8bc4be956dc97af, type: 3}
+  walkingSound2: {fileID: 8300000, guid: bd290d5322e25fc468ca967fefd7c38e, type: 3}
+  soundSensor: {fileID: 4662000663245579659}
+  observationHistorySize: 4
+  ballTransform: {fileID: 4540201673231058}
+  maxDistanceToBall: 10
 --- !u!114 &114320493772006642
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2528,7 +2534,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 0
+    VectorObservationSize: 29
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
@@ -2567,6 +2573,12 @@ MonoBehaviour:
   agentRb: {fileID: 0}
   initialPos: {x: 0, y: 0, z: 0}
   rotSign: 0
+  walkingSound1: {fileID: 8300000, guid: c64b2e272b659964c8bc4be956dc97af, type: 3}
+  walkingSound2: {fileID: 8300000, guid: bd290d5322e25fc468ca967fefd7c38e, type: 3}
+  soundSensor: {fileID: 796105769966339250}
+  observationHistorySize: 4
+  ballTransform: {fileID: 4540201673231058}
+  maxDistanceToBall: 10
 --- !u!114 &114516244030127556
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3103,6 +3115,10 @@ MonoBehaviour:
   envController: {fileID: 0}
   purpleGoalTag: purpleGoal
   blueGoalTag: blueGoal
+  sensor1: {fileID: 0}
+  sensor2: {fileID: 0}
+  sensor3: {fileID: 0}
+  sensor4: {fileID: 0}
 --- !u!54 &54100138833592438
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -4435,7 +4451,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 0
+    VectorObservationSize: 29
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
@@ -4474,6 +4490,12 @@ MonoBehaviour:
   agentRb: {fileID: 0}
   initialPos: {x: 0, y: 0, z: 0}
   rotSign: 0
+  walkingSound1: {fileID: 8300000, guid: c64b2e272b659964c8bc4be956dc97af, type: 3}
+  walkingSound2: {fileID: 8300000, guid: bd290d5322e25fc468ca967fefd7c38e, type: 3}
+  soundSensor: {fileID: 7548069788310921501}
+  observationHistorySize: 4
+  ballTransform: {fileID: 4540201673231058}
+  maxDistanceToBall: 10
 --- !u!114 &1023485123796557062
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4974,7 +4996,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 0
+    VectorObservationSize: 29
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
@@ -5013,6 +5035,12 @@ MonoBehaviour:
   agentRb: {fileID: 0}
   initialPos: {x: 0, y: 0, z: 0}
   rotSign: 0
+  walkingSound1: {fileID: 8300000, guid: c64b2e272b659964c8bc4be956dc97af, type: 3}
+  walkingSound2: {fileID: 8300000, guid: bd290d5322e25fc468ca967fefd7c38e, type: 3}
+  soundSensor: {fileID: 217286280874173272}
+  observationHistorySize: 4
+  ballTransform: {fileID: 4540201673231058}
+  maxDistanceToBall: 10
 --- !u!114 &2562571719799803906
 MonoBehaviour:
   m_ObjectHideFlags: 0

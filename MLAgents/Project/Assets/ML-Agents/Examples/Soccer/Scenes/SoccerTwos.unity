@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44971442, g: 0.499779, b: 0.5756378, a: 1}
+  m_IndirectSpecularColor: {r: 0.4497143, g: 0.49977887, b: 0.57563794, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -376,6 +376,11 @@ PrefabInstance:
       propertyPath: sensor4
       value: 
       objectReference: {fileID: 2017894712}
+    - target: {fileID: 114387866097048300, guid: 54f3340298537426e96a6cc530e2d5d8,
+        type: 3}
+      propertyPath: m_BrainParameters.VectorObservationSize
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 114492261207303438, guid: 54f3340298537426e96a6cc530e2d5d8,
         type: 3}
       propertyPath: soundSensor
@@ -383,6 +388,11 @@ PrefabInstance:
       objectReference: {fileID: 1571599136}
     - target: {fileID: 114492261207303438, guid: 54f3340298537426e96a6cc530e2d5d8,
         type: 3}
+      propertyPath: ballTransform
+      value: 
+      objectReference: {fileID: 829247297}
+    - target: {fileID: 114492261207303438, guid: 54f3340298537426e96a6cc530e2d5d8,
+        type: 3}
       propertyPath: walkingSound1
       value: 
       objectReference: {fileID: 8300000, guid: c64b2e272b659964c8bc4be956dc97af, type: 3}
@@ -391,11 +401,21 @@ PrefabInstance:
       propertyPath: walkingSound2
       value: 
       objectReference: {fileID: 8300000, guid: bd290d5322e25fc468ca967fefd7c38e, type: 3}
+    - target: {fileID: 114734187185382186, guid: 54f3340298537426e96a6cc530e2d5d8,
+        type: 3}
+      propertyPath: m_BrainParameters.VectorObservationSize
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 114850431417842684, guid: 54f3340298537426e96a6cc530e2d5d8,
         type: 3}
       propertyPath: soundSensor
       value: 
       objectReference: {fileID: 1715376690}
+    - target: {fileID: 114850431417842684, guid: 54f3340298537426e96a6cc530e2d5d8,
+        type: 3}
+      propertyPath: ballTransform
+      value: 
+      objectReference: {fileID: 829247297}
     - target: {fileID: 114850431417842684, guid: 54f3340298537426e96a6cc530e2d5d8,
         type: 3}
       propertyPath: walkingSound1
@@ -406,11 +426,21 @@ PrefabInstance:
       propertyPath: walkingSound2
       value: 
       objectReference: {fileID: 8300000, guid: bd290d5322e25fc468ca967fefd7c38e, type: 3}
+    - target: {fileID: 3316085536305919483, guid: 54f3340298537426e96a6cc530e2d5d8,
+        type: 3}
+      propertyPath: m_BrainParameters.VectorObservationSize
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 5320024511406682322, guid: 54f3340298537426e96a6cc530e2d5d8,
         type: 3}
       propertyPath: soundSensor
       value: 
       objectReference: {fileID: 2017894712}
+    - target: {fileID: 5320024511406682322, guid: 54f3340298537426e96a6cc530e2d5d8,
+        type: 3}
+      propertyPath: ballTransform
+      value: 
+      objectReference: {fileID: 829247297}
     - target: {fileID: 5320024511406682322, guid: 54f3340298537426e96a6cc530e2d5d8,
         type: 3}
       propertyPath: walkingSound1
@@ -428,6 +458,11 @@ PrefabInstance:
       objectReference: {fileID: 1106697645}
     - target: {fileID: 5379409612883756837, guid: 54f3340298537426e96a6cc530e2d5d8,
         type: 3}
+      propertyPath: ballTransform
+      value: 
+      objectReference: {fileID: 829247297}
+    - target: {fileID: 5379409612883756837, guid: 54f3340298537426e96a6cc530e2d5d8,
+        type: 3}
       propertyPath: walkingSound1
       value: 
       objectReference: {fileID: 8300000, guid: c64b2e272b659964c8bc4be956dc97af, type: 3}
@@ -436,6 +471,11 @@ PrefabInstance:
       propertyPath: walkingSound2
       value: 
       objectReference: {fileID: 8300000, guid: bd290d5322e25fc468ca967fefd7c38e, type: 3}
+    - target: {fileID: 8577361778124631730, guid: 54f3340298537426e96a6cc530e2d5d8,
+        type: 3}
+      propertyPath: m_BrainParameters.VectorObservationSize
+      value: 25
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -591,6 +631,12 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 829247283}
   m_Enabled: 1
+--- !u!4 &829247297 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4540201673231058, guid: 54f3340298537426e96a6cc530e2d5d8,
+    type: 3}
+  m_PrefabInstance: {fileID: 774084574}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1009000883
 GameObject:
   m_ObjectHideFlags: 0
