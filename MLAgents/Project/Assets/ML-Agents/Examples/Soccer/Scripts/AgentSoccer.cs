@@ -31,14 +31,9 @@ public class AgentSoccer : Agent
     public float rotSign;
     EnvironmentParameters m_ResetParams;
 
-    // Walking sound variables
-    public AudioClip walkingSound1; // First step sound
-    public AudioClip walkingSound2; // Second step sound
-    private bool playFirstSound = true; // Track which sound to play
-    private float stepCooldown = 0.1f; // Time between steps (in seconds)
-    private float stepTimer = 0; // Timer for stepping
-    private AudioSource audioSource; // Reference to AudioSource
-    public RayPerceptionSensorComponent3D soundSensor;
+    public GameObject ball; // Reference to the ball object
+    public Vector3 fieldCenter = Vector3.zero; // Center of the field
+    public float maxAllowedDistance = 15f; // Maximum allowed distance from the field center
 
     public enum Position
     {
@@ -49,6 +44,22 @@ public class AgentSoccer : Agent
 
     public override void Initialize()
     {
+        agentRb = GetComponent<Rigidbody>(); // Assign the Rigidbody
+        if (agentRb == null)
+        {
+            Debug.LogError("agentRb is null!");
+        }
+
+        ball = GameObject.FindWithTag("ball"); // Find the ball with tag "ball"
+        if (ball == null)
+        {
+            Debug.LogError("Ball object with tag 'ball' not found!");
+        }
+        else
+        {
+            Debug.Log("Ball found: " + ball.name);
+        }
+
         SoccerEnvController envController = GetComponentInParent<SoccerEnvController>();
         if (envController != null)
         {
@@ -72,6 +83,7 @@ public class AgentSoccer : Agent
             initialPos = new Vector3(transform.position.x + 5f, .5f, transform.position.z);
             rotSign = -1f;
         }
+
         if (position == Position.Goalie)
         {
             m_LateralSpeed = 1.0f;
@@ -87,24 +99,81 @@ public class AgentSoccer : Agent
             m_LateralSpeed = 0.3f;
             m_ForwardSpeed = 1.0f;
         }
+
         m_SoccerSettings = FindObjectOfType<SoccerSettings>();
-        agentRb = GetComponent<Rigidbody>();
         agentRb.maxAngularVelocity = 500;
 
         m_ResetParams = Academy.Instance.EnvironmentParameters;
+    }
 
-        // Initialize audio source
-        audioSource = GetComponent<AudioSource>();
-        soundSensor.enabled = false;
+    public override void CollectObservations(VectorSensor sensor)
+{
+    Debug.Log($"CollectObservations called for: {gameObject.name}");
 
+    // Check transform
+    if (transform != null)
+    {
+        sensor.AddObservation(transform.localPosition); // Agent's position
+    }
+    else
+    {
+        Debug.LogError($"Transform is null for: {gameObject.name}");
+    }
+
+    // Check agentRb
+    if (agentRb != null)
+    {
+        sensor.AddObservation(agentRb.velocity); // Agent's velocity
+    }
+    else
+    {
+        Debug.LogError($"agentRb is null for: {gameObject.name}. Make sure the Rigidbody is attached.");
+    }
+
+    // Check ball
+    if (ball != null)
+    {
+        sensor.AddObservation(ball.transform.localPosition); // Ball's position
+    }
+    else
+    {
+        Debug.LogError($"Ball is null for: {gameObject.name}. Ensure the ball is assigned correctly.");
+    }
+}
+
+
+    public override void OnActionReceived(ActionBuffers actionBuffers)
+    {
+        if (position == Position.Goalie)
+        {
+            AddReward(m_Existential);
+        }
+        else if (position == Position.Striker)
+        {
+            AddReward(-m_Existential);
+        }
+        MoveAgent(actionBuffers.DiscreteActions);
+
+        float distanceToBall = Vector3.Distance(transform.position, ball.transform.position);
+        float rewardForProximity = Mathf.Clamp(1 - (distanceToBall / maxAllowedDistance), 0, 1);
+        AddReward(rewardForProximity * 0.01f);
+
+        float distanceFromCenter = Vector3.Distance(transform.position, fieldCenter);
+        if (distanceFromCenter > maxAllowedDistance)
+        {
+            AddReward(-0.01f);
+        }
+    }
+
+    public override void OnEpisodeBegin()
+    {
+        m_BallTouch = m_ResetParams.GetWithDefault("ball_touch", 0);
     }
 
     public void MoveAgent(ActionSegment<int> act)
     {
         var dirToGo = Vector3.zero;
         var rotateDir = Vector3.zero;
-
-        //m_KickPower = 0f;
 
         var forwardAxis = act[0];
         var lateralAxis = act[1];
@@ -114,7 +183,6 @@ public class AgentSoccer : Agent
         {
             case 1:
                 dirToGo += transform.forward * m_ForwardSpeed;
-                //m_KickPower = 1f;
                 break;
             case 2:
                 dirToGo += -transform.forward * m_ForwardSpeed;
@@ -150,67 +218,11 @@ public class AgentSoccer : Agent
         agentRb.AddForce(dirToGo, ForceMode.VelocityChange);
     }
 
-    public override void OnActionReceived(ActionBuffers actionBuffers)
+    void OnCollisionEnter(Collision collision)
     {
-        if (position == Position.Goalie)
+        if (collision.gameObject.CompareTag("ball"))
         {
-            AddReward(m_Existential);
-        }
-        else if (position == Position.Striker)
-        {
-            AddReward(-m_Existential);
-        }
-        MoveAgent(actionBuffers.DiscreteActions);
-    }
-
-    public override void OnEpisodeBegin()
-    {
-        m_BallTouch = m_ResetParams.GetWithDefault("ball_touch", 0);
-    }
-
-     void FixedUpdate()
-    {
-        // Check agent velocity
-        float velocityMagnitude = agentRb.velocity.magnitude;
-
-        if (velocityMagnitude > 0.3f) // Movement threshold
-        {
-            stepTimer -= Time.fixedDeltaTime;
-
-            if (stepTimer <= 0)
-            {
-                // Alternate between the two sounds
-                if (!audioSource.isPlaying)
-                {
-                    if (playFirstSound && walkingSound1 != null)
-                    {
-                        audioSource.clip = walkingSound1;
-                    }
-                    else if (walkingSound2 != null)
-                    {
-                        audioSource.clip = walkingSound2;
-                    }
-
-                    audioSource.Play();
-                    
-
-                    // Toggle sound for next step
-                    playFirstSound = !playFirstSound;
-
-                    // Set a cooldown time between steps
-                    stepCooldown = Mathf.Clamp(0.2f / velocityMagnitude, 0.2f, 1.0f); // Adjust range for timing
-                    stepTimer = stepCooldown;
-                }
-            }
-        }
-        else
-        {
-            if (audioSource.isPlaying)
-            {
-                audioSource.Stop();
-            }
-
-            stepTimer = 0; // Reset the timer
+            AddReward(0.5f); // Positive reward for ball interaction
         }
     }
 }

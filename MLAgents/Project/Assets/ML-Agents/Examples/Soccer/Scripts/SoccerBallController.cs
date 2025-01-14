@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.MLAgents.Sensors;
+
 public class SoccerBallController : MonoBehaviour
 {
     public GameObject area;
@@ -7,6 +8,7 @@ public class SoccerBallController : MonoBehaviour
     public SoccerEnvController envController;
     public string purpleGoalTag; // Used to check if collided with purple goal
     public string blueGoalTag;   // Used to check if collided with blue goal
+    public Rigidbody ballRb;
     public RayPerceptionSensorComponent3D sensor1;    // The sensor to enable/disable
     public RayPerceptionSensorComponent3D sensor2;    // The sensor to enable/disable
     public RayPerceptionSensorComponent3D sensor3;    // The sensor to enable/disable
@@ -48,6 +50,15 @@ public class SoccerBallController : MonoBehaviour
         {
             envController.GoalTouched(Team.Purple);
         }
+
+        // Reward ball interaction
+       if (col.gameObject.CompareTag("blueAgent") || col.gameObject.CompareTag("purpleAgent"))
+        {
+            // Reward for ball touching an agent (kicking or interacting)
+            col.gameObject.GetComponent<AgentSoccer>().AddReward(0.5f); // Adjust the reward as needed
+        }
+
+
         StartCoroutine(EnableSensorTemporarily());
     }
 }

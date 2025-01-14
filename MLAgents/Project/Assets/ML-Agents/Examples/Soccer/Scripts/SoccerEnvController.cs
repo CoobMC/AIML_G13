@@ -16,31 +16,15 @@ public class SoccerEnvController : MonoBehaviour
         public Rigidbody Rb;
     }
 
-
-    /// <summary>
-    /// Max Academy steps before this platform resets
-    /// </summary>
-    /// <returns></returns>
     [Tooltip("Max Environment Steps")] public int MaxEnvironmentSteps = 25000;
-
-    /// <summary>
-    /// The area bounds.
-    /// </summary>
-
-    /// <summary>
-    /// We will be changing the ground material based on success/failue
-    /// </summary>
-
     public GameObject ball;
     [HideInInspector]
     public Rigidbody ballRb;
     Vector3 m_BallStartingPos;
 
-    //List of Agents On Platform
     public List<PlayerInfo> AgentsList = new List<PlayerInfo>();
 
     private SoccerSettings m_SoccerSettings;
-
 
     private SimpleMultiAgentGroup m_BlueAgentGroup;
     private SimpleMultiAgentGroup m_PurpleAgentGroup;
@@ -49,13 +33,12 @@ public class SoccerEnvController : MonoBehaviour
 
     void Start()
     {
-
         m_SoccerSettings = FindObjectOfType<SoccerSettings>();
-        // Initialize TeamManager
         m_BlueAgentGroup = new SimpleMultiAgentGroup();
         m_PurpleAgentGroup = new SimpleMultiAgentGroup();
         ballRb = ball.GetComponent<Rigidbody>();
         m_BallStartingPos = new Vector3(ball.transform.position.x, ball.transform.position.y, ball.transform.position.z);
+
         foreach (var item in AgentsList)
         {
             item.StartingPos = item.Agent.transform.position;
@@ -70,6 +53,7 @@ public class SoccerEnvController : MonoBehaviour
                 m_PurpleAgentGroup.RegisterAgent(item.Agent);
             }
         }
+
         ResetScene();
     }
 
@@ -84,7 +68,6 @@ public class SoccerEnvController : MonoBehaviour
         }
     }
 
-
     public void ResetBall()
     {
         var randomPosX = Random.Range(-2.5f, 2.5f);
@@ -93,41 +76,35 @@ public class SoccerEnvController : MonoBehaviour
         ball.transform.position = m_BallStartingPos + new Vector3(randomPosX, 0f, randomPosZ);
         ballRb.velocity = Vector3.zero;
         ballRb.angularVelocity = Vector3.zero;
-
     }
 
     public void GoalTouched(Team scoredTeam)
     {
-        // Play goal sound
-        var audioSource = ball.GetComponent<AudioSource>();
-        if (audioSource != null)
-        {
-            audioSource.Play();
-        }
-
+        // Reward for scoring
         if (scoredTeam == Team.Blue)
         {
-            m_BlueAgentGroup.AddGroupReward(1 - (float)m_ResetTimer / MaxEnvironmentSteps);
-            m_PurpleAgentGroup.AddGroupReward(-1);
+            m_BlueAgentGroup.AddGroupReward(1.0f); // Significant reward for scoring
+            m_PurpleAgentGroup.AddGroupReward(-0.5f); // Penalize the opposing team
         }
         else
         {
-            m_PurpleAgentGroup.AddGroupReward(1 - (float)m_ResetTimer / MaxEnvironmentSteps);
-            m_BlueAgentGroup.AddGroupReward(-1);
+            m_PurpleAgentGroup.AddGroupReward(1.0f); // Significant reward for scoring
+            m_BlueAgentGroup.AddGroupReward(-0.5f); // Penalize the opposing team
         }
 
+        // End the episode after a goal
         m_PurpleAgentGroup.EndGroupEpisode();
         m_BlueAgentGroup.EndGroupEpisode();
+
+        // Reset the scene after a goal
         ResetScene();
     }
-
-
 
     public void ResetScene()
     {
         m_ResetTimer = 0;
 
-        //Reset Agents
+        // Reset Agents
         foreach (var item in AgentsList)
         {
             var randomPosX = Random.Range(-5f, 5f);
@@ -140,7 +117,7 @@ public class SoccerEnvController : MonoBehaviour
             item.Rb.angularVelocity = Vector3.zero;
         }
 
-        //Reset Ball
+        // Reset Ball
         ResetBall();
     }
 }
