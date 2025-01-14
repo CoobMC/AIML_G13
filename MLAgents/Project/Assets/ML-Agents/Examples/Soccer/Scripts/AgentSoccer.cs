@@ -44,21 +44,9 @@ public class AgentSoccer : Agent
 
     public override void Initialize()
     {
-        agentRb = GetComponent<Rigidbody>(); // Assign the Rigidbody
-        if (agentRb == null)
-        {
-            Debug.LogError("agentRb is null!");
-        }
-
-        ball = GameObject.FindWithTag("ball"); // Find the ball with tag "ball"
-        if (ball == null)
-        {
-            Debug.LogError("Ball object with tag 'ball' not found!");
-        }
-        else
-        {
-            Debug.Log("Ball found: " + ball.name);
-        }
+        agentRb = GetComponent<Rigidbody>();
+        ball = GameObject.FindWithTag("ball");
+        
 
         SoccerEnvController envController = GetComponentInParent<SoccerEnvController>();
         if (envController != null)
@@ -107,39 +95,16 @@ public class AgentSoccer : Agent
     }
 
     public override void CollectObservations(VectorSensor sensor)
-{
-    Debug.Log($"CollectObservations called for: {gameObject.name}");
+    {
 
-    // Check transform
-    if (transform != null)
-    {
-        sensor.AddObservation(transform.localPosition); // Agent's position
-    }
-    else
-    {
-        Debug.LogError($"Transform is null for: {gameObject.name}");
+        sensor.AddObservation(transform.localPosition / 10f); // 3 floats
+
+        if (ball != null)
+        {
+            sensor.AddObservation(ball.transform.localPosition / 10f); // 3 floats
+        }
     }
 
-    // Check agentRb
-    if (agentRb != null)
-    {
-        sensor.AddObservation(agentRb.velocity); // Agent's velocity
-    }
-    else
-    {
-        Debug.LogError($"agentRb is null for: {gameObject.name}. Make sure the Rigidbody is attached.");
-    }
-
-    // Check ball
-    if (ball != null)
-    {
-        sensor.AddObservation(ball.transform.localPosition); // Ball's position
-    }
-    else
-    {
-        Debug.LogError($"Ball is null for: {gameObject.name}. Ensure the ball is assigned correctly.");
-    }
-}
 
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
