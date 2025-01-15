@@ -2243,7 +2243,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 0
+    VectorObservationSize: 15
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
@@ -2252,7 +2252,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 8cd4584c2f2cb4c5fb51675d364e10ec, type: 3}
+  m_Model: {fileID: 0}
   m_InferenceDevice: 2
   m_BehaviorType: 0
   m_BehaviorName: SoccerTwos
@@ -2278,10 +2278,14 @@ MonoBehaviour:
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
   team: 0
-  position: 2
+  rotSign: 0
+  ball: {fileID: 1682753582128710}
+  fieldCenter: {x: 0, y: 0, z: 0}
+  maxAllowedDistance: 15
   agentRb: {fileID: 0}
   initialPos: {x: 0, y: 0, z: 0}
-  rotSign: 0
+  observationHistorySize: 4
+  ballTransform: {fileID: 4540201673231058}
 --- !u!114 &114320493772006642
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2528,7 +2532,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 0
+    VectorObservationSize: 15
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
@@ -2537,7 +2541,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 8cd4584c2f2cb4c5fb51675d364e10ec, type: 3}
+  m_Model: {fileID: 0}
   m_InferenceDevice: 2
   m_BehaviorType: 0
   m_BehaviorName: SoccerTwos
@@ -2563,10 +2567,14 @@ MonoBehaviour:
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
   team: 1
-  position: 2
+  rotSign: 0
+  ball: {fileID: 1682753582128710}
+  fieldCenter: {x: 0, y: 0, z: 0}
+  maxAllowedDistance: 15
   agentRb: {fileID: 0}
   initialPos: {x: 0, y: 0, z: 0}
-  rotSign: 0
+  observationHistorySize: 4
+  ballTransform: {fileID: 4540201673231058}
 --- !u!114 &114516244030127556
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3103,6 +3111,11 @@ MonoBehaviour:
   envController: {fileID: 0}
   purpleGoalTag: purpleGoal
   blueGoalTag: blueGoal
+  ballRb: {fileID: 54100138833592438}
+  sensor1: {fileID: 114516244030127556}
+  sensor2: {fileID: 2562571719799803906}
+  sensor3: {fileID: 114320493772006642}
+  sensor4: {fileID: 1023485123796557062}
 --- !u!54 &54100138833592438
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -4435,7 +4448,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 0
+    VectorObservationSize: 15
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
@@ -4444,7 +4457,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 8cd4584c2f2cb4c5fb51675d364e10ec, type: 3}
+  m_Model: {fileID: 0}
   m_InferenceDevice: 2
   m_BehaviorType: 0
   m_BehaviorName: SoccerTwos
@@ -4470,10 +4483,14 @@ MonoBehaviour:
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
   team: 0
-  position: 2
+  rotSign: 0
+  ball: {fileID: 1682753582128710}
+  fieldCenter: {x: 0, y: 0, z: 0}
+  maxAllowedDistance: 15
   agentRb: {fileID: 0}
   initialPos: {x: 0, y: 0, z: 0}
-  rotSign: 0
+  observationHistorySize: 4
+  ballTransform: {fileID: 4540201673231058}
 --- !u!114 &1023485123796557062
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4974,7 +4991,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 0
+    VectorObservationSize: 15
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
@@ -4983,7 +5000,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 8cd4584c2f2cb4c5fb51675d364e10ec, type: 3}
+  m_Model: {fileID: 0}
   m_InferenceDevice: 2
   m_BehaviorType: 0
   m_BehaviorName: SoccerTwos
@@ -5009,10 +5026,14 @@ MonoBehaviour:
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
   team: 1
-  position: 2
+  rotSign: 0
+  ball: {fileID: 1682753582128710}
+  fieldCenter: {x: 0, y: 0, z: 0}
+  maxAllowedDistance: 15
   agentRb: {fileID: 0}
   initialPos: {x: 0, y: 0, z: 0}
-  rotSign: 0
+  observationHistorySize: 4
+  ballTransform: {fileID: 4540201673231058}
 --- !u!114 &2562571719799803906
 MonoBehaviour:
   m_ObjectHideFlags: 0

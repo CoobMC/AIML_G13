@@ -27,7 +27,9 @@ public class AgentSoccer : Agent
 
     // Observation history memory
     private Queue<float[]> observationHistory = new Queue<float[]>(); // Memory for past observations
-    public int observationHistorySize = 1;
+    public int observationHistorySize = 4;
+
+    public Transform ballTransform;  // Reference to the ball's Transform
 
     public override void Initialize()
     {
@@ -60,44 +62,69 @@ public class AgentSoccer : Agent
 
    public override void CollectObservations(VectorSensor sensor)
     {
-        // Collect current observations
-        float[] currentObservations = GetCurrentObservations(); // 3 floats
+        if (sensor == null)
+        {
+            Debug.LogError("VectorSensor is null. Ensure Vector Observation Space Size is set correctly in Behavior Parameters.");
+            return;
+        }
+
+        // Current relative position of the ball
+        Vector3 relativeBallPosition = ballTransform.position - transform.position;
+        sensor.AddObservation(relativeBallPosition);
+
+        // Add current and historical raycast observations
+        float[] currentObservations = GetCurrentObservations();
+        if (currentObservations == null || currentObservations.Length == 0)
+        {
+            Debug.LogError("GetCurrentObservations returned null or empty array.");
+            return;
+        }
+
         sensor.AddObservation(currentObservations);
 
-        // Manage observation history
+        // Enforce observation history size
         if (observationHistory.Count >= observationHistorySize)
         {
-            observationHistory.Dequeue(); // Remove oldest observation
+            observationHistory.Dequeue(); // Remove the oldest observation
         }
+
         observationHistory.Enqueue(currentObservations);
 
-        // Add historical observations
+        // Add historical observations to the sensor
         foreach (var pastObservation in observationHistory)
         {
             sensor.AddObservation(pastObservation);
         }
-
-        // Ensure total observations match configured space size
-        int totalObservations = currentObservations.Length + (observationHistory.Count * currentObservations.Length);
-
-        if (totalObservations > 15)
-        {
-            Debug.LogError("More observations than expected! " + totalObservations);
-        }else if (totalObservations < 15){
-            Debug.LogError("Less observations than expected! " + totalObservations);
-        }
     }
-
-
 
     private float[] GetCurrentObservations()
     {
-        // Get the relative position of the agent to the ball
-        Vector3 relativePosition = ball != null
-            ? (ball.transform.localPosition - transform.localPosition) / maxAllowedDistance
-            : Vector3.zero;
+        int numRaycasts = 5; // Rays Per Direction from Ray Perception Sensor
+        float rayLength = 20f; // Ray Length from Ray Perception Sensor
+        float rayAngleStart = -60f; // Maximum Ray Degrees (Half the Field of View)
+        float rayAngleEnd = 60f;
+        float rayAngleIncrement = (rayAngleEnd - rayAngleStart) / (numRaycasts - 1); // Increment per ray
 
-        return new float[] { relativePosition.x, relativePosition.y, relativePosition.z };
+        float[] observations = new float[numRaycasts]; // Array to hold raycast distances
+
+        for (int i = 0; i < numRaycasts; i++)
+        {
+            float angle = rayAngleStart + i * rayAngleIncrement;
+            Vector3 direction = Quaternion.Euler(0f, angle, 0f) * transform.forward;
+
+            // Perform the raycast
+            if (Physics.Raycast(transform.position + new Vector3(0, 0.5f, 0), direction, out RaycastHit hit, rayLength)) // Start Vertical Offset = 0.5
+            {
+                float normalizedDistance = hit.distance / rayLength; // Normalize distance to [0, 1]
+                observations[i] = normalizedDistance;
+            }
+            else
+            {
+                observations[i] = 1f; // Maximum distance (no hit)
+            }
+        }
+
+        return observations;
     }
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
