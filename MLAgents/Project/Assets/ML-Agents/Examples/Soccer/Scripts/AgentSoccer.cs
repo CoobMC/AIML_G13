@@ -1,7 +1,7 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
-using Unity.MLAgents.Policies;
 using Unity.MLAgents.Sensors;
 
 public enum Team
@@ -14,125 +14,95 @@ public class AgentSoccer : Agent
 {
     [HideInInspector]
     public Team team;
-    float m_KickPower;
-    float m_BallTouch;
-    public Position position;
 
-    const float k_Power = 2000f;
-    float m_Existential;
-    float m_LateralSpeed;
-    float m_ForwardSpeed;
+    public float rotSign; // For team-based rotation
+    public GameObject ball; // Reference to the ball
+    public Vector3 fieldCenter = Vector3.zero;
+    public float maxAllowedDistance = 15f;
 
     [HideInInspector]
     public Rigidbody agentRb;
-    SoccerSettings m_SoccerSettings;
-    BehaviorParameters m_BehaviorParameters;
+
     public Vector3 initialPos;
-    public float rotSign;
-    EnvironmentParameters m_ResetParams;
 
-    public GameObject ball; // Reference to the ball object
-    public Vector3 fieldCenter = Vector3.zero; // Center of the field
-    public float maxAllowedDistance = 15f; // Maximum allowed distance from the field center
-
-    public enum Position
-    {
-        Striker,
-        Goalie,
-        Generic
-    }
+    // Observation history memory
+    private Queue<float[]> observationHistory = new Queue<float[]>(); // Memory for past observations
+    public int observationHistorySize = 1; // History size set to 1 for total space size of 6
 
     public override void Initialize()
     {
         agentRb = GetComponent<Rigidbody>();
         ball = GameObject.FindWithTag("ball");
-        
 
-        SoccerEnvController envController = GetComponentInParent<SoccerEnvController>();
-        if (envController != null)
+        if (ball == null)
         {
-            m_Existential = 1f / envController.MaxEnvironmentSteps;
-        }
-        else
-        {
-            m_Existential = 1f / MaxStep;
+            Debug.LogError("Ball not found! Ensure it's tagged correctly.");
         }
 
-        m_BehaviorParameters = gameObject.GetComponent<BehaviorParameters>();
-        if (m_BehaviorParameters.TeamId == (int)Team.Blue)
-        {
-            team = Team.Blue;
-            initialPos = new Vector3(transform.position.x - 5f, .5f, transform.position.z);
-            rotSign = 1f;
-        }
-        else
-        {
-            team = Team.Purple;
-            initialPos = new Vector3(transform.position.x + 5f, .5f, transform.position.z);
-            rotSign = -1f;
-        }
-
-        if (position == Position.Goalie)
-        {
-            m_LateralSpeed = 1.0f;
-            m_ForwardSpeed = 1.0f;
-        }
-        else if (position == Position.Striker)
-        {
-            m_LateralSpeed = 0.3f;
-            m_ForwardSpeed = 1.3f;
-        }
-        else
-        {
-            m_LateralSpeed = 0.3f;
-            m_ForwardSpeed = 1.0f;
-        }
-
-        m_SoccerSettings = FindObjectOfType<SoccerSettings>();
-        agentRb.maxAngularVelocity = 500;
-
-        m_ResetParams = Academy.Instance.EnvironmentParameters;
+        initialPos = transform.position;
+        observationHistory.Clear(); // Clear the observation history
     }
 
-    public override void CollectObservations(VectorSensor sensor)
+    public override void OnEpisodeBegin()
     {
-
-        sensor.AddObservation(transform.localPosition / 10f); // 3 floats
+        observationHistory.Clear();
+        transform.position = initialPos;
+        transform.rotation = Quaternion.identity;
+        agentRb.velocity = Vector3.zero;
+        agentRb.angularVelocity = Vector3.zero;
 
         if (ball != null)
         {
-            sensor.AddObservation(ball.transform.localPosition / 10f); // 3 floats
+            ball.transform.position = new Vector3(0, 0.5f, 0);
         }
     }
 
 
+    public override void CollectObservations(VectorSensor sensor)
+    {
+        float[] currentObservations = GetCurrentObservations();
+        sensor.AddObservation(currentObservations);
+        
+        if (observationHistory.Count >= observationHistorySize)
+        {
+            observationHistory.Dequeue();
+        }
+        observationHistory.Enqueue(currentObservations);
+
+        foreach (var pastObservation in observationHistory)
+        {
+            sensor.AddObservation(pastObservation);
+        }
+
+        Debug.Log($"Observations Added: {currentObservations.Length + (observationHistorySize * currentObservations.Length)}");
+    }
+
+
+    private float[] GetCurrentObservations()
+    {
+        // Get the relative position of the agent to the ball
+        Vector3 relativePosition = ball != null
+            ? (ball.transform.localPosition - transform.localPosition) / maxAllowedDistance
+            : Vector3.zero;
+
+        return new float[] { relativePosition.x, relativePosition.y, relativePosition.z };
+    }
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
-        if (position == Position.Goalie)
-        {
-            AddReward(m_Existential);
-        }
-        else if (position == Position.Striker)
-        {
-            AddReward(-m_Existential);
-        }
-        MoveAgent(actionBuffers.DiscreteActions);
-
+        // Reward for proximity to the ball
         float distanceToBall = Vector3.Distance(transform.position, ball.transform.position);
         float rewardForProximity = Mathf.Clamp(1 - (distanceToBall / maxAllowedDistance), 0, 1);
         AddReward(rewardForProximity * 0.01f);
 
+        // Penalize for moving too far from the center
         float distanceFromCenter = Vector3.Distance(transform.position, fieldCenter);
         if (distanceFromCenter > maxAllowedDistance)
         {
             AddReward(-0.01f);
         }
-    }
 
-    public override void OnEpisodeBegin()
-    {
-        m_BallTouch = m_ResetParams.GetWithDefault("ball_touch", 0);
+        MoveAgent(actionBuffers.DiscreteActions);
     }
 
     public void MoveAgent(ActionSegment<int> act)
@@ -147,20 +117,20 @@ public class AgentSoccer : Agent
         switch (forwardAxis)
         {
             case 1:
-                dirToGo += transform.forward * m_ForwardSpeed;
+                dirToGo += transform.forward;
                 break;
             case 2:
-                dirToGo += -transform.forward * m_ForwardSpeed;
+                dirToGo += -transform.forward;
                 break;
         }
 
         switch (lateralAxis)
         {
             case 1:
-                dirToGo += transform.right * m_LateralSpeed;
+                dirToGo += transform.right;
                 break;
             case 2:
-                dirToGo += -transform.right * m_LateralSpeed;
+                dirToGo += -transform.right;
                 break;
         }
 
@@ -179,8 +149,8 @@ public class AgentSoccer : Agent
                 break;
         }
 
-        transform.Rotate(rotateDir, Time.deltaTime * 100f);
-        agentRb.AddForce(dirToGo, ForceMode.VelocityChange);
+        transform.Rotate(rotateDir, Time.deltaTime * 50f); // Reduced rotation speed
+        agentRb.AddForce(dirToGo * 5f, ForceMode.VelocityChange); // Reduced movement force
     }
 
     void OnCollisionEnter(Collision collision)

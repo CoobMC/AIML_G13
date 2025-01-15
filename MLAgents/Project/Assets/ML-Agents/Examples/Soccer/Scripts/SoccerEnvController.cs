@@ -108,8 +108,8 @@ public class SoccerEnvController : MonoBehaviour
         foreach (var item in AgentsList)
         {
             var randomPosX = Random.Range(-5f, 5f);
-            var newStartPos = item.Agent.initialPos + new Vector3(randomPosX, 0f, 0f);
-            var rot = item.Agent.rotSign * Random.Range(80.0f, 100.0f);
+            var newStartPos = new Vector3(randomPosX, 0.5f, 0f); // Example of dynamic positioning
+            var rot = item.Agent.rotSign * Random.Range(80.0f, 100.0f); // Use rotSign for rotation
             var newRot = Quaternion.Euler(0, rot, 0);
             item.Agent.transform.SetPositionAndRotation(newStartPos, newRot);
 
@@ -120,4 +120,5 @@ public class SoccerEnvController : MonoBehaviour
         // Reset Ball
         ResetBall();
     }
+
 }
