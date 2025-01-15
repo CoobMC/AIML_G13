@@ -27,7 +27,7 @@ public class AgentSoccer : Agent
 
     // Observation history memory
     private Queue<float[]> observationHistory = new Queue<float[]>(); // Memory for past observations
-    public int observationHistorySize = 1; // History size set to 1 for total space size of 6
+    public int observationHistorySize = 1;
 
     public override void Initialize()
     {
@@ -58,24 +58,36 @@ public class AgentSoccer : Agent
     }
 
 
-    public override void CollectObservations(VectorSensor sensor)
+   public override void CollectObservations(VectorSensor sensor)
     {
-        float[] currentObservations = GetCurrentObservations();
+        // Collect current observations
+        float[] currentObservations = GetCurrentObservations(); // 3 floats
         sensor.AddObservation(currentObservations);
-        
+
+        // Manage observation history
         if (observationHistory.Count >= observationHistorySize)
         {
-            observationHistory.Dequeue();
+            observationHistory.Dequeue(); // Remove oldest observation
         }
         observationHistory.Enqueue(currentObservations);
 
+        // Add historical observations
         foreach (var pastObservation in observationHistory)
         {
             sensor.AddObservation(pastObservation);
         }
 
-        Debug.Log($"Observations Added: {currentObservations.Length + (observationHistorySize * currentObservations.Length)}");
+        // Ensure total observations match configured space size
+        int totalObservations = currentObservations.Length + (observationHistory.Count * currentObservations.Length);
+
+        if (totalObservations > 15)
+        {
+            Debug.LogError("More observations than expected! " + totalObservations);
+        }else if (totalObservations < 15){
+            Debug.LogError("Less observations than expected! " + totalObservations);
+        }
     }
+
 
 
     private float[] GetCurrentObservations()
