@@ -26,7 +26,7 @@ public class SoccerEnvController : MonoBehaviour
     public List<PlayerInfo> AgentsList = new List<PlayerInfo>();
 
     private SoccerSettings m_SoccerSettings;
-
+    private AgentSoccer lastAgentTouched;
     private SimpleMultiAgentGroup m_BlueAgentGroup;
     private SimpleMultiAgentGroup m_PurpleAgentGroup;
 
@@ -84,18 +84,41 @@ public class SoccerEnvController : MonoBehaviour
 
     public void GoalTouched(Team scoredTeam)
     {
-        // Reward for scoring
+        lastAgentTouched = ball.GetComponent<SoccerBallController>().GetLastAgentTouched();
+        // Determine the scoring team and apply rewards/penalties
         if (scoredTeam == Team.Blue)
         {
             BlueScore++;
-            m_BlueAgentGroup.AddGroupReward(1.0f); // Significant reward for scoring
-            m_PurpleAgentGroup.AddGroupReward(-0.5f); // Penalize the opposing team
+
+            // Check if it is an own goal
+            if (lastAgentTouched != null && lastAgentTouched.team == Team.Purple)
+            {
+                // Purple team scored an own goal
+                m_PurpleAgentGroup.AddGroupReward(-1.0f); // Penalize own goal
+                //Debug.Log("Purple team scored an own goal!");
+            }
+            else
+            {
+                m_BlueAgentGroup.AddGroupReward(1.0f);
+                m_PurpleAgentGroup.AddGroupReward(-0.5f); 
+            }
         }
         else
         {
             PurpleScore++;
-            m_PurpleAgentGroup.AddGroupReward(1.0f); // Significant reward for scoring
-            m_BlueAgentGroup.AddGroupReward(-0.5f); // Penalize the opposing team
+
+            // Check if it is an own goal
+            if (lastAgentTouched != null && lastAgentTouched.team == Team.Blue)
+            {
+                // Blue team scored an own goal
+                m_BlueAgentGroup.AddGroupReward(-1.0f); // Penalize own goal
+                //Debug.Log("Blue team scored an own goal!");
+            }
+            else
+            {
+                m_PurpleAgentGroup.AddGroupReward(1.0f); 
+                m_BlueAgentGroup.AddGroupReward(-0.5f);
+            }
         }
 
         UpdateScoreUI(); // Update the UI with the new score
@@ -107,6 +130,7 @@ public class SoccerEnvController : MonoBehaviour
         // Reset the scene after a goal
         ResetScene();
     }
+
 
     private void UpdateScoreUI()
     {

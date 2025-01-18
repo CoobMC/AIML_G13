@@ -19,10 +19,11 @@ public class AgentSoccer : Agent
     public GameObject ball; // Reference to the ball
     public Vector3 fieldCenter = Vector3.zero;
     public float maxAllowedDistance = 15f;
-
     [HideInInspector]
     public Rigidbody agentRb;
+    private AgentSoccer lastAgentTouched;
 
+    private bool hasInteractedWithBall = false; // Tracks if the agent interacted with the ball
     public Vector3 initialPos;
 
     // Observation history memory
@@ -62,40 +63,81 @@ public class AgentSoccer : Agent
 
    public override void CollectObservations(VectorSensor sensor)
     {
-        if (sensor == null)
+        int observationCount = 0;
+
+        // 1. Sound Intensity
+        float soundIntensity = 0f;
+        if (ball != null)
         {
-            Debug.LogError("VectorSensor is null. Ensure Vector Observation Space Size is set correctly in Behavior Parameters.");
-            return;
+            var audioSource = ball.GetComponent<AudioSource>();
+            if (audioSource != null && audioSource.isPlaying)
+            {
+                float distance = Vector3.Distance(transform.position, ball.transform.position);
+                soundIntensity = 1.0f / (distance + 1.0f); // Normalize and avoid division by zero
+            }
+        }
+        sensor.AddObservation(soundIntensity); // 1 observation
+        observationCount++;
+
+        // 2. Relative Ball Position
+        Vector3 relativeBallPosition = ball.transform.position - transform.position;
+        sensor.AddObservation(relativeBallPosition); // 3 observations (Vector3)
+        observationCount += 3;
+
+        // 3. Ball Velocity
+        if (ball.TryGetComponent<Rigidbody>(out Rigidbody ballRb))
+        {
+            sensor.AddObservation(ballRb.velocity); // 3 observations (Vector3)
+            observationCount += 3;
+        }
+        else
+        {
+            sensor.AddObservation(Vector3.zero); // Add zero velocity if Rigidbody is missing
+            observationCount += 3;
         }
 
-        // Current relative position of the ball
-        Vector3 relativeBallPosition = ballTransform.position - transform.position;
-        sensor.AddObservation(relativeBallPosition);
+        // 4. Agent Velocity
+        sensor.AddObservation(agentRb.velocity); // 3 observations (Vector3)
+        observationCount += 3;
 
-        // Add current and historical raycast observations
-        float[] currentObservations = GetCurrentObservations();
-        if (currentObservations == null || currentObservations.Length == 0)
+        // 5. Distance to Goals
+        SoccerEnvController envController = FindObjectOfType<SoccerEnvController>();
+        if (envController != null)
         {
-            Debug.LogError("GetCurrentObservations returned null or empty array.");
-            return;
+            Vector3 blueGoalPosition = envController.ball.transform.position + new Vector3(-15, 0, 0);
+            Vector3 purpleGoalPosition = envController.ball.transform.position + new Vector3(15, 0, 0);
+
+            float distanceToBlueGoal = Vector3.Distance(transform.position, blueGoalPosition);
+            float distanceToPurpleGoal = Vector3.Distance(transform.position, purpleGoalPosition);
+
+            sensor.AddObservation(distanceToBlueGoal); // 1 observation
+            sensor.AddObservation(distanceToPurpleGoal); // 1 observation
+            observationCount += 2;
         }
 
-        sensor.AddObservation(currentObservations);
-
-        // Enforce observation history size
-        if (observationHistory.Count >= observationHistorySize)
+        // 6. Teammates' Relative Positions
+        SoccerEnvController.PlayerInfo[] teammates = envController.AgentsList.FindAll(a => a.Agent.team == team).ToArray();
+        foreach (var teammate in teammates)
         {
-            observationHistory.Dequeue(); // Remove the oldest observation
+            if (teammate.Agent != this) // Exclude self
+            {
+                Vector3 relativeTeammatePosition = teammate.Agent.transform.position - transform.position;
+                sensor.AddObservation(relativeTeammatePosition); // 3 observations (Vector3)
+                observationCount += 3;
+            }
         }
 
-        observationHistory.Enqueue(currentObservations);
-
-        // Add historical observations to the sensor
-        foreach (var pastObservation in observationHistory)
+        // 7. Opponents' Relative Positions
+        SoccerEnvController.PlayerInfo[] opponents = envController.AgentsList.FindAll(a => a.Agent.team != team).ToArray();
+        foreach (var opponent in opponents)
         {
-            sensor.AddObservation(pastObservation);
+            Vector3 relativeOpponentPosition = opponent.Agent.transform.position - transform.position;
+            sensor.AddObservation(relativeOpponentPosition); // 3 observations (Vector3)
+            observationCount += 3;
         }
     }
+
+
 
     private float[] GetCurrentObservations()
     {
@@ -103,9 +145,9 @@ public class AgentSoccer : Agent
         float rayLength = 20f; // Ray Length from Ray Perception Sensor
         float rayAngleStart = -60f; // Maximum Ray Degrees (Half the Field of View)
         float rayAngleEnd = 60f;
-        float rayAngleIncrement = (rayAngleEnd - rayAngleStart) / (numRaycasts - 1); // Increment per ray
+        float rayAngleIncrement = (rayAngleEnd - rayAngleStart) / (numRaycasts - 1);
 
-        float[] observations = new float[numRaycasts]; // Array to hold raycast distances
+        float[] observations = new float[numRaycasts];
 
         for (int i = 0; i < numRaycasts; i++)
         {
@@ -115,32 +157,63 @@ public class AgentSoccer : Agent
             // Perform the raycast
             if (Physics.Raycast(transform.position + new Vector3(0, 0.5f, 0), direction, out RaycastHit hit, rayLength)) // Start Vertical Offset = 0.5
             {
-                float normalizedDistance = hit.distance / rayLength; // Normalize distance to [0, 1]
+                float normalizedDistance = hit.distance / rayLength;
                 observations[i] = normalizedDistance;
             }
             else
             {
-                observations[i] = 1f; // Maximum distance (no hit)
+                observations[i] = 1f;
             }
         }
 
         return observations;
     }
 
-    public override void OnActionReceived(ActionBuffers actionBuffers)
+   public override void OnActionReceived(ActionBuffers actionBuffers)
     {
-        // Reward for proximity to the ball
+        // 1. Proximity to Ball
         float distanceToBall = Vector3.Distance(transform.position, ball.transform.position);
-        float rewardForProximity = Mathf.Clamp(1 - (distanceToBall / maxAllowedDistance), 0, 1);
-        AddReward(rewardForProximity * 0.01f);
+        float proximityReward = Mathf.Clamp(1 - (distanceToBall / maxAllowedDistance), 0, 1);
+        AddReward(proximityReward * 0.01f); // Encourage moving closer to the ball
 
-        // Penalize for moving too far from the center
-        float distanceFromCenter = Vector3.Distance(transform.position, fieldCenter);
-        if (distanceFromCenter > maxAllowedDistance)
+        // 2. Ball Interaction
+        if (hasInteractedWithBall)
         {
-            AddReward(-0.01f);
+            AddReward(0.5f); // Reward for touching the ball
+            hasInteractedWithBall = false;
         }
 
+        lastAgentTouched = ball.GetComponent<SoccerBallController>().GetLastAgentTouched();
+
+        // 4. Passing to Teammates
+        if (lastAgentTouched != null && lastAgentTouched != this)
+        {
+            if (lastAgentTouched.team == this.team)
+            {
+                // Passed to a teammate
+                AddReward(0.2f);
+                //Debug.Log($"{lastAgentTouched.name} passed to teammate {name}");
+            }
+            else
+            {
+                // Passed to an opponent
+                AddReward(-0.3f);
+                //Debug.Log($"{lastAgentTouched.name} passed to opponent {name}");
+            }
+        }
+
+        // 6. Time Penalty
+        AddReward(-0.001f); // Small penalty for each step to encourage quicker decisions
+
+        // 7. Field Awareness
+        float distanceFromFieldCenter = Vector3.Distance(transform.position, fieldCenter);
+        if (distanceFromFieldCenter > maxAllowedDistance)
+        {
+            AddReward(-0.05f); // Penalize for moving too far from the center
+        }
+
+
+        // Execute movement
         MoveAgent(actionBuffers.DiscreteActions);
     }
 
@@ -188,14 +261,15 @@ public class AgentSoccer : Agent
                 break;
         }
 
-        transform.Rotate(rotateDir, Time.deltaTime * 50f); // Reduced rotation speed
-        agentRb.AddForce(dirToGo * 5f, ForceMode.VelocityChange); // Reduced movement force
+        transform.Rotate(rotateDir, Time.deltaTime * 50f);
+        agentRb.AddForce(dirToGo * 5f, ForceMode.VelocityChange); 
     }
 
     void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("ball"))
         {
+            hasInteractedWithBall = true; 
             AddReward(0.5f); // Positive reward for ball interaction
         }
     }

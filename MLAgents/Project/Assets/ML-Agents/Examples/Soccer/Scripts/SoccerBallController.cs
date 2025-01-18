@@ -1,18 +1,73 @@
 using UnityEngine;
 using Unity.MLAgents.Sensors;
 
+
 public class SoccerBallController : MonoBehaviour
 {
     public GameObject area;
     [HideInInspector]
     public SoccerEnvController envController;
-    public string purpleGoalTag; // Used to check if collided with purple goal
-    public string blueGoalTag;   // Used to check if collided with blue goal
+    public string purpleGoalTag;
+    public string blueGoalTag;
     public Rigidbody ballRb;
-    public RayPerceptionSensorComponent3D sensor1;    // The sensor to enable/disable
-    public RayPerceptionSensorComponent3D sensor2;    // The sensor to enable/disable
-    public RayPerceptionSensorComponent3D sensor3;    // The sensor to enable/disable
-    public RayPerceptionSensorComponent3D sensor4;    // The sensor to enable/disable
+
+    private AgentSoccer lastAgentTouched;
+
+    // Sensors for temporary activation
+    public RayPerceptionSensorComponent3D sensor1;
+    public RayPerceptionSensorComponent3D sensor2;
+    public RayPerceptionSensorComponent3D sensor3;
+    public RayPerceptionSensorComponent3D sensor4;
+
+    void Start()
+    {
+        envController = area.GetComponent<SoccerEnvController>();
+    }
+
+    void OnCollisionEnter(Collision col)
+    {
+        // Play audio when the ball is touched
+        var audioSource = GetComponent<AudioSource>();
+        if (audioSource != null && !audioSource.isPlaying)
+        {
+            audioSource.Play();
+        }
+
+        // Goal collision logic
+        if (col.gameObject.CompareTag(purpleGoalTag))
+        {
+            envController.GoalTouched(Team.Blue); // Blue team scores
+        }
+        else if (col.gameObject.CompareTag(blueGoalTag))
+        {
+            envController.GoalTouched(Team.Purple); // Purple team scores
+        }
+
+        // Interaction with agents
+        if (col.gameObject.CompareTag("purpleAgent") || col.gameObject.CompareTag("blueAgent"))
+        {
+            var currentAgent = col.gameObject.GetComponent<AgentSoccer>();
+
+            if (currentAgent != null)
+            {
+                // Update the last agent that touched the ball
+                lastAgentTouched = currentAgent;
+
+                // Reward the current agent for interacting with the ball
+                currentAgent.AddReward(0.5f);
+            }
+        }
+
+        // Temporarily enable sensors
+        StartCoroutine(EnableSensorTemporarily());
+    }
+
+    public AgentSoccer GetLastAgentTouched()
+    {
+        return lastAgentTouched;
+    }
+
+    // Enable sensors for a short duration
     private System.Collections.IEnumerator EnableSensorTemporarily()
     {
         sensor1.enabled = true;
@@ -24,41 +79,5 @@ public class SoccerBallController : MonoBehaviour
         sensor2.enabled = false;
         sensor3.enabled = false;
         sensor4.enabled = false;
-    }
-
-
-    void Start()
-    {
-        envController = area.GetComponent<SoccerEnvController>();
-    }
-
-    void OnCollisionEnter(Collision col)
-    {
-        // Play sound for any collision with agent, wall, or goal
-        var audioSource = GetComponent<AudioSource>();
-        if (audioSource != null)
-        {
-            audioSource.Play();
-        }
-
-        // Handle goal collision logic
-        if (col.gameObject.CompareTag(purpleGoalTag)) // Ball touched purple goal
-        {
-            envController.GoalTouched(Team.Blue);
-        }
-        else if (col.gameObject.CompareTag(blueGoalTag)) // Ball touched blue goal
-        {
-            envController.GoalTouched(Team.Purple);
-        }
-
-        // Reward ball interaction
-       if (col.gameObject.CompareTag("blueAgent") || col.gameObject.CompareTag("purpleAgent"))
-        {
-            // Reward for ball touching an agent (kicking or interacting)
-            col.gameObject.GetComponent<AgentSoccer>().AddReward(0.5f); // Adjust the reward as needed
-        }
-
-
-        StartCoroutine(EnableSensorTemporarily());
     }
 }

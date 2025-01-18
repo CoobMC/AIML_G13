@@ -17,9 +17,8 @@ behaviors:
       hidden_units: 512
       num_layers: 2
       vis_encode_type: simple
-      memory: None
+      memory: null
       goal_conditioning_type: hyper
-      deterministic: false
     reward_signals:
       extrinsic:
         gamma: 0.99
@@ -29,9 +28,8 @@ behaviors:
           hidden_units: 128
           num_layers: 2
           vis_encode_type: simple
-          memory: None
+          memory: null
           goal_conditioning_type: hyper
-          deterministic: false
     keep_checkpoints: 5
     checkpoint_interval: 500000
     even_checkpoints: false
@@ -46,4 +44,4 @@ behaviors:
       window: 20
       play_against_latest_model_ratio: 0.7
       initial_elo: 1200.0
-    behavioral_cloning: None
+    behavioral_cloning: null
