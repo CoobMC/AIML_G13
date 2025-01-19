@@ -123,10 +123,10 @@ public class SoccerEnvController : MonoBehaviour
             m_BlueAgentGroup.AddGroupReward(-1);
         }
 
-        UpdateScoreUI();
         m_PurpleAgentGroup.EndGroupEpisode();
         m_BlueAgentGroup.EndGroupEpisode();
         ResetScene();
+        UpdateScoreUI();
     }
 
     public void ResetScene()
