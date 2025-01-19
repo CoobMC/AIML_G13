@@ -137,38 +137,6 @@ public class AgentSoccer : Agent
         }
     }
 
-
-
-    private float[] GetCurrentObservations()
-    {
-        int numRaycasts = 5; // Rays Per Direction from Ray Perception Sensor
-        float rayLength = 20f; // Ray Length from Ray Perception Sensor
-        float rayAngleStart = -60f; // Maximum Ray Degrees (Half the Field of View)
-        float rayAngleEnd = 60f;
-        float rayAngleIncrement = (rayAngleEnd - rayAngleStart) / (numRaycasts - 1);
-
-        float[] observations = new float[numRaycasts];
-
-        for (int i = 0; i < numRaycasts; i++)
-        {
-            float angle = rayAngleStart + i * rayAngleIncrement;
-            Vector3 direction = Quaternion.Euler(0f, angle, 0f) * transform.forward;
-
-            // Perform the raycast
-            if (Physics.Raycast(transform.position + new Vector3(0, 0.5f, 0), direction, out RaycastHit hit, rayLength)) // Start Vertical Offset = 0.5
-            {
-                float normalizedDistance = hit.distance / rayLength;
-                observations[i] = normalizedDistance;
-            }
-            else
-            {
-                observations[i] = 1f;
-            }
-        }
-
-        return observations;
-    }
-
    public override void OnActionReceived(ActionBuffers actionBuffers)
     {
         // 1. Proximity to Ball
@@ -179,7 +147,7 @@ public class AgentSoccer : Agent
         // 2. Ball Interaction
         if (hasInteractedWithBall)
         {
-            AddReward(0.5f); // Reward for touching the ball
+            //AddReward(0.5f); // Reward for touching the ball
             hasInteractedWithBall = false;
         }
 
@@ -203,7 +171,7 @@ public class AgentSoccer : Agent
         }
 
         // 6. Time Penalty
-        AddReward(-0.001f); // Small penalty for each step to encourage quicker decisions
+        AddReward(-0.0001f); // Small penalty for each step to encourage quicker decisions
 
         // 7. Field Awareness
         float distanceFromFieldCenter = Vector3.Distance(transform.position, fieldCenter);
@@ -262,15 +230,15 @@ public class AgentSoccer : Agent
         }
 
         transform.Rotate(rotateDir, Time.deltaTime * 50f);
-        agentRb.AddForce(dirToGo * 5f, ForceMode.VelocityChange); 
+        agentRb.AddForce(dirToGo * 5f, ForceMode.VelocityChange);
     }
 
     void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("ball"))
         {
-            hasInteractedWithBall = true; 
-            AddReward(0.5f); // Positive reward for ball interaction
+            hasInteractedWithBall = true;
+            AddReward(0.1f); // Positive reward for ball interaction
         }
     }
 }

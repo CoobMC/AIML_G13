@@ -89,6 +89,7 @@ public class SoccerEnvController : MonoBehaviour
         if (scoredTeam == Team.Blue)
         {
             BlueScore++;
+            Debug.Log("Purple team scored an own goal! Score is now: " + BlueScore);
 
             // Check if it is an own goal
             if (lastAgentTouched != null && lastAgentTouched.team == Team.Purple)
@@ -99,13 +100,14 @@ public class SoccerEnvController : MonoBehaviour
             }
             else
             {
-                m_BlueAgentGroup.AddGroupReward(1.0f);
-                m_PurpleAgentGroup.AddGroupReward(-0.5f); 
+                m_BlueAgentGroup.AddGroupReward(2.0f);
+                m_PurpleAgentGroup.AddGroupReward(-1.0f);
             }
         }
         else
         {
             PurpleScore++;
+            Debug.Log("Purple team scored an own goal! Score is now: " + PurpleScore);
 
             // Check if it is an own goal
             if (lastAgentTouched != null && lastAgentTouched.team == Team.Blue)
@@ -116,8 +118,8 @@ public class SoccerEnvController : MonoBehaviour
             }
             else
             {
-                m_PurpleAgentGroup.AddGroupReward(1.0f); 
-                m_BlueAgentGroup.AddGroupReward(-0.5f);
+                m_PurpleAgentGroup.AddGroupReward(2.0f);
+                m_BlueAgentGroup.AddGroupReward(-1.0f);
             }
         }
 
@@ -142,9 +144,6 @@ public class SoccerEnvController : MonoBehaviour
 
     public void ResetScene()
     {
-        BlueScore = 0;
-        PurpleScore = 0;
-
         m_ResetTimer = 0;
 
         UpdateScoreUI(); // Reset the displayed scores
