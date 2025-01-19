@@ -206,7 +206,7 @@ public class AgentSoccer : Agent
         }
 
         // 6. Time Penalty
-        AddReward(-0.0001f); // Small penalty for each step to encourage quicker decisions
+        AddReward(-0.00001f); // Small penalty for each step to encourage quicker decisions
 
         // 7. Field Awareness
         float distanceFromFieldCenter = Vector3.Distance(transform.position, fieldCenter);
@@ -268,51 +268,12 @@ public class AgentSoccer : Agent
         agentRb.AddForce(dirToGo * 5f, ForceMode.VelocityChange);
     }
 
-    public override void Heuristic(in ActionBuffers actionsOut)
+    void OnCollisionEnter(Collision collision)
     {
-        var discreteActionsOut = actionsOut.DiscreteActions;
-        //forward
-        if (Input.GetKey(KeyCode.W))
+        if (collision.gameObject.CompareTag("ball"))
         {
-            discreteActionsOut[0] = 1;
-        }
-        if (Input.GetKey(KeyCode.S))
-        {
-            discreteActionsOut[0] = 2;
-        }
-        //rotate
-        if (Input.GetKey(KeyCode.A))
-        {
-            discreteActionsOut[2] = 1;
-        }
-        if (Input.GetKey(KeyCode.D))
-        {
-            discreteActionsOut[2] = 2;
-        }
-        //right
-        if (Input.GetKey(KeyCode.E))
-        {
-            discreteActionsOut[1] = 1;
-        }
-        if (Input.GetKey(KeyCode.Q))
-        {
-            discreteActionsOut[1] = 2;
-        }
-    }
-
-    void OnCollisionEnter(Collision c)
-    {
-        var force = k_Power * m_KickPower;
-        if (position == Position.Goalie)
-        {
-            force = k_Power;
-        }
-        if (c.gameObject.CompareTag("ball"))
-        {
-            AddReward(.2f * m_BallTouch);
-            var dir = c.contacts[0].point - transform.position;
-            dir = dir.normalized;
-            c.gameObject.GetComponent<Rigidbody>().AddForce(dir * force);
+            hasInteractedWithBall = true;
+            AddReward(0.1f); // Positive reward for ball interaction
         }
     }
 }
