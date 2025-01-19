@@ -95,12 +95,12 @@ public class SoccerEnvController : MonoBehaviour
             if (lastAgentTouched != null && lastAgentTouched.team == Team.Purple)
             {
                 // Purple team scored an own goal
-                m_PurpleAgentGroup.AddGroupReward(-1.0f); // Penalize own goal
+                m_PurpleAgentGroup.AddGroupReward(-2.0f); // Penalize own goal
                 //Debug.Log("Purple team scored an own goal!");
             }
             else
             {
-                m_BlueAgentGroup.AddGroupReward(2.0f);
+                m_BlueAgentGroup.AddGroupReward(2.5f);
                 m_PurpleAgentGroup.AddGroupReward(-1.0f);
             }
         }
@@ -113,12 +113,12 @@ public class SoccerEnvController : MonoBehaviour
             if (lastAgentTouched != null && lastAgentTouched.team == Team.Blue)
             {
                 // Blue team scored an own goal
-                m_BlueAgentGroup.AddGroupReward(-1.0f); // Penalize own goal
+                m_BlueAgentGroup.AddGroupReward(-2.0f); // Penalize own goal
                 //Debug.Log("Blue team scored an own goal!");
             }
             else
             {
-                m_PurpleAgentGroup.AddGroupReward(2.0f);
+                m_PurpleAgentGroup.AddGroupReward(2.5f);
                 m_BlueAgentGroup.AddGroupReward(-1.0f);
             }
         }

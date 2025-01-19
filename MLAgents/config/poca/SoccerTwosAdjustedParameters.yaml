@@ -33,7 +33,7 @@ behaviors:
     keep_checkpoints: 5
     checkpoint_interval: 500000
     even_checkpoints: false
-    max_steps: 20000000
+    max_steps: 50000000
     time_horizon: 1000
     summary_freq: 10000
     threaded: false
