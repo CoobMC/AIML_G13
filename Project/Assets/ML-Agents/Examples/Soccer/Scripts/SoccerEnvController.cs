@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using Unity.MLAgents;
 using UnityEngine;
 
@@ -15,7 +16,6 @@ public class SoccerEnvController : MonoBehaviour
         [HideInInspector]
         public Rigidbody Rb;
     }
-
 
     /// <summary>
     /// Max Academy steps before this platform resets
@@ -46,6 +46,11 @@ public class SoccerEnvController : MonoBehaviour
     private SimpleMultiAgentGroup m_PurpleAgentGroup;
 
     private int m_ResetTimer;
+
+    public int BlueScore;
+    public int PurpleScore;
+
+    public TextMeshPro ScoreText; // Reference to the TextMeshPro object
 
     void Start()
     {
@@ -84,6 +89,13 @@ public class SoccerEnvController : MonoBehaviour
         }
     }
 
+    private void UpdateScoreUI()
+    {
+        if (ScoreText != null)
+        {
+            ScoreText.text = $"<color=blue>Blue: {BlueScore}</color>                               <color=purple>Purple: {PurpleScore}</color>";
+        }
+    }
 
     public void ResetBall()
     {
@@ -100,20 +112,22 @@ public class SoccerEnvController : MonoBehaviour
     {
         if (scoredTeam == Team.Blue)
         {
+            BlueScore++;
             m_BlueAgentGroup.AddGroupReward(1 - (float)m_ResetTimer / MaxEnvironmentSteps);
             m_PurpleAgentGroup.AddGroupReward(-1);
         }
         else
         {
+            PurpleScore++;
             m_PurpleAgentGroup.AddGroupReward(1 - (float)m_ResetTimer / MaxEnvironmentSteps);
             m_BlueAgentGroup.AddGroupReward(-1);
         }
+
+        UpdateScoreUI();
         m_PurpleAgentGroup.EndGroupEpisode();
         m_BlueAgentGroup.EndGroupEpisode();
         ResetScene();
-
     }
-
 
     public void ResetScene()
     {
