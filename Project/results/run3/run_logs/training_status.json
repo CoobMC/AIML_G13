@@ -1,0 +1,66 @@
+{
+    "SoccerTwos": {
+        "checkpoints": [
+            {
+                "steps": 3499975,
+                "file_path": "results/run3/SoccerTwos/SoccerTwos-3499975.onnx",
+                "reward": 0.0,
+                "creation_time": 1737342958.056735,
+                "auxillary_file_paths": [
+                    "results/run3/SoccerTwos/SoccerTwos-3499975.pt"
+                ]
+            },
+            {
+                "steps": 3999902,
+                "file_path": "results/run3/SoccerTwos/SoccerTwos-3999902.onnx",
+                "reward": 0.0,
+                "creation_time": 1737345236.928085,
+                "auxillary_file_paths": [
+                    "results/run3/SoccerTwos/SoccerTwos-3999902.pt"
+                ]
+            },
+            {
+                "steps": 4499986,
+                "file_path": "results/run3/SoccerTwos/SoccerTwos-4499986.onnx",
+                "reward": 0.0,
+                "creation_time": 1737347494.916717,
+                "auxillary_file_paths": [
+                    "results/run3/SoccerTwos/SoccerTwos-4499986.pt"
+                ]
+            },
+            {
+                "steps": 4999989,
+                "file_path": "results/run3/SoccerTwos/SoccerTwos-4999989.onnx",
+                "reward": 0.0,
+                "creation_time": 1737349805.487756,
+                "auxillary_file_paths": [
+                    "results/run3/SoccerTwos/SoccerTwos-4999989.pt"
+                ]
+            },
+            {
+                "steps": 5000096,
+                "file_path": "results/run3/SoccerTwos/SoccerTwos-5000096.onnx",
+                "reward": 0.0,
+                "creation_time": 1737349805.6243021,
+                "auxillary_file_paths": [
+                    "results/run3/SoccerTwos/SoccerTwos-5000096.pt"
+                ]
+            }
+        ],
+        "elo": 1453.8635396476982,
+        "final_checkpoint": {
+            "steps": 5000096,
+            "file_path": "results/run3/SoccerTwos.onnx",
+            "reward": 0.0,
+            "creation_time": 1737349805.6243021,
+            "auxillary_file_paths": [
+                "results/run3/SoccerTwos/SoccerTwos-5000096.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.5.1"
+    }
+}
